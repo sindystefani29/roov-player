@@ -5,8 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack",
-    "watch": "webpack --watch",
-    "start": "webpack serve --env development"
+    "start": "webpack --watch"
   },
   "keywords": [],
   "author": "",
