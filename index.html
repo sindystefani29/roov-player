@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript" src="./dist/bundle.js"></script>
+</head>
+<body>
+    <video controls id="roov-player" style="display: none;"></video>
+    <button id="play-m3u8">Play m3u8</button>
+    <button id="play-m4a">Play m4a</button>
+    <button id="play-mp3">Play mp3</button>
+    <button id="play-radio">Play Radio</button>
+    <button id="pause">Pause</button>
+    <button id="resume">Resume</button>
+    <div id="ad-container"></div>
+
+    <script src="//imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
+    <script>
+        let player
+        document.getElementById('play-m3u8').addEventListener('click', (e) => {
+            player = new roov.player({
+                src: 'https://cogecomedia.leanstream.co/cogecomedia/CKBEFM.stream/playlist.m3u8',
+                withAds: true,
+                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpremidpost&cmsid=496&vid=short_onecue&correlator='
+            })
+            player.play()
+        })
+        document.getElementById('play-m4a').addEventListener('click', (e) => {
+            player = new roov.player({
+                src: 'https://d3ctxlq1ktw2nl.cloudfront.net/staging/2019-3-19/13133706-44100-2-b9a686e417783.m4a',
+                withAds: true,
+                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpremidpost&cmsid=496&vid=short_onecue&correlator='
+            })
+            player.play()
+        })
+        document.getElementById('play-mp3').addEventListener('click', (e) => {
+            player = new roov.player({
+                src: 'https://storage-roov.mncdigital.com/upload/file/contentpodcasts/untuk-yang-pernah-datang_1598403437.mp3',
+                withAds: true,
+                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpremidpost&cmsid=496&vid=short_onecue&correlator=',
+                onPlaying: () => {
+                    console.log('-----------audio is playing-----------')
+                },
+                onBuffering: () => {
+                    console.log('-----------audio is buffering-----------')
+                },
+                getBufferLength: (currentSeconds, bufferedEnd) => {
+                    console.log("current seconds: "+currentSeconds+", buffered end: "+bufferedEnd)
+                },
+                onTimeUpdate: () => {
+                    console.log('-----------event GA / GTM sent-----------')
+                }
+            })
+            player.play()
+        })
+        document.getElementById('play-radio').addEventListener('click', (e) => {
+            player = new roov.player({
+                src: 'http://masima.rastream.com/masima-pramborsjakarta?',
+                withAds: true,
+                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpremidpost&cmsid=496&vid=short_onecue&correlator='
+            })
+            player.play()
+        })
+        document.getElementById('pause').addEventListener('click', (e) => {
+            player.pause()
+        })
+        document.getElementById('resume').addEventListener('click', (e) => {
+            player.play()
+        })
+    </script>
+</body>
+</html>
