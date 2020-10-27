@@ -1,22 +1,15 @@
 const path = require("path");
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
-    mode: 'development',
+    mode: 'production',
 
     entry:  './src/index.js',
 
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist'),
-        library: 'roov',
-        libraryTarget: 'umd',
-        globalObject: "typeof self !== 'undefined' ? self : this"
-    },
-
-    devtool: 'inline-source-map',
-
-    devServer: {
-        contentBase: './dist',
+        library: 'roov'
     },
 
     module: {
@@ -27,5 +20,10 @@ module.exports = {
                 exclude: /(node_modules)/
             }
         ]
+    },
+
+    optimization: {
+        minimize: true,
+        minimizer: [new TerserPlugin()],
     }
 };
