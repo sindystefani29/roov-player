@@ -51,7 +51,13 @@
                 },
                 onTimeUpdate: () => {
                     console.log('-----------event GA / GTM sent-----------')
-                }
+                },
+                onAdsPlaying: (state) => {
+                    console.log(state)
+                },
+                onAdsFinish: (state) => {
+                    console.log(state)
+                },
             })
             player.play()
         })

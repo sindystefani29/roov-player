@@ -26,7 +26,7 @@ export default class player {
     console.log('isHLS', this.isHLS())
   }
 
-  initializeConfigAds({ withAds = false, adElement = "ad-container", adsURL }) {
+  initializeConfigAds({ withAds = false, adElement = "ad-container", adsURL, onAdsPlaying, onAdsFinish }) {
     if (typeof google === "undefined") {
       return;
     }
@@ -34,8 +34,8 @@ export default class player {
     this._adElement = adElement;
     this._adsURL = adsURL;
     if (withAds) {
-      this.isAdsLoaded = false;
-      this.isAdsPlaying = false
+      this.onAdsPlaying = onAdsPlaying
+      this.onAdsFinish = onAdsFinish
       this.initializeIMA();
     }
   }
@@ -104,6 +104,7 @@ export default class player {
 
     this._player.addEventListener('ended', () => {
       this._adsLoader.contentComplete();
+      this.isContentFinished = true //prevent post-roll to re-play the content
     })
 
     this._adsRequest = new google.ima.AdsRequest();
@@ -132,8 +133,25 @@ export default class player {
     this._adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED, () => { this.onContentPauseRequested() });
     this._adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED, () => { this.onContentResumeRequested() });
     this._adsManager.addEventListener(google.ima.AdEvent.Type.LOADED, (e) => { this.onAdLoaded(e) });
+    this._adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, (e) => { this.onAdStarted() });
+    this._adsManager.addEventListener(google.ima.AdEvent.Type.COMPLETE, (e) => { this.onAdComplete() });
     this.loadAds(event)
   }
+
+  onAdStarted(){
+    this.isAdsPlaying = true
+    if(this.onAdsPlaying){
+      this.onAdsPlaying('Ads is Playing')
+    }
+  }
+
+  onAdComplete(){
+    this.isAdsPlaying = false
+    if(this.onAdsFinish){
+      this.onAdsFinish('Ads is finished')
+    }
+  }
+
   onAdLoaded(event) {
     let ad = event.getAd();
     this.isAdsLoaded = true
@@ -152,13 +170,11 @@ export default class player {
 
   onContentPauseRequested() {
     console.log('onContentPauseRequested')
-    this.isAdsPlaying = true
     this.pause();
   }
 
   onContentResumeRequested() {
     console.log('onContentResumeRequested')
-    this.isAdsPlaying = false
     this.play();
   }
 
@@ -215,8 +231,7 @@ export default class player {
   }
 
   playVideo(){
-    console.log('this.isAdsPlaying', this.isAdsPlaying)
-    if(this.isAdsLoaded || !this._withAds){
+    if((this.isAdsLoaded || !this._withAds) && !this.isContentFinished){
       this._player.play()
     }
   }
@@ -226,7 +241,6 @@ export default class player {
   }
 
   pause() {
-    console.log('this.isAdsPlaying', this.isAdsPlaying)
     this._player.pause()
     if(this.isAdsPlaying){
       this._adsManager.pause()
