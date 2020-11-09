@@ -26,7 +26,15 @@ export default class player {
     console.log('isHLS', this.isHLS())
   }
 
-  initializeConfigAds({ withAds = false, adElement = "ad-container", adsURL, onAdsPlaying, onAdsFinish }) {
+  initializeConfigAds({ 
+    withAds = false, 
+    adElement = "ad-container", 
+    adsURL,
+    onPlaying,
+    onBuffering,
+    getBufferLength,
+    onFinish
+  }) {
     if (typeof google === "undefined") {
       return;
     }
@@ -34,8 +42,10 @@ export default class player {
     this._adElement = adElement;
     this._adsURL = adsURL;
     if (withAds) {
-      this.onAdsPlaying = onAdsPlaying
-      this.onAdsFinish = onAdsFinish
+      this.onPlaying = onPlaying
+      this.onBuffering = onBuffering
+      this.getBufferLength = getBufferLength
+      this.onFinish = onFinish
       this.initializeIMA();
     }
   }
@@ -57,7 +67,11 @@ export default class player {
       this._player.addEventListener("waiting", onBuffering);
     }
     if (onFinish) {
-      this._player.addEventListener("ended", onFinish);
+      this._player.addEventListener("ended", () =>{
+        if(this.isAllAdsCompleted){
+          onFinish()
+        }
+      });
     }
     this._player.addEventListener("timeupdate", (e) => {
       if (onTimeUpdate) {
@@ -133,22 +147,39 @@ export default class player {
     this._adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED, () => { this.onContentPauseRequested() });
     this._adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED, () => { this.onContentResumeRequested() });
     this._adsManager.addEventListener(google.ima.AdEvent.Type.LOADED, (e) => { this.onAdLoaded(e) });
-    this._adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, (e) => { this.onAdStarted() });
-    this._adsManager.addEventListener(google.ima.AdEvent.Type.COMPLETE, (e) => { this.onAdComplete() });
+    this._adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, (e) => { this.onAdEvent(e) });
+    this._adsManager.addEventListener(google.ima.AdEvent.Type.COMPLETE, (e) => { this.onAdEvent(e) });
+    this._adsManager.addEventListener(google.ima.AdEvent.Type.AD_BUFFERING, (e) => { this.onAdEvent(e) });
+    this._adsManager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, (e) => { this.onAdEvent(e) });
+    this._adsManager.addEventListener(google.ima.AdEvent.Type.AD_PROGRESS, (e) => { this.onAdEvent(e) });
     this.loadAds(event)
   }
 
-  onAdStarted(){
-    this.isAdsPlaying = true
-    if(this.onAdsPlaying){
-      this.onAdsPlaying('Ads is Playing')
-    }
-  }
-
-  onAdComplete(){
-    this.isAdsPlaying = false
-    if(this.onAdsFinish){
-      this.onAdsFinish('Ads is finished')
+  onAdEvent(e){
+    const currentType = google.ima.AdEvent.Type
+    switch(e.type){
+      case currentType.STARTED:
+        this.isAdsPlaying = true
+        this.onPlaying({state: 'ADS'})
+        break;
+      case currentType.AD_BUFFERING:
+        this.onBuffering()
+        break;
+      case currentType.COMPLETE:
+        this.isAdsPlaying = false
+        break;
+      case currentType.AD_PROGRESS:
+        let adData = e.getAdData();
+        this.getBufferLength(adData.currentTime, adData.duration);
+        break;
+      case currentType.ALL_ADS_COMPLETED:
+        this.isAllAdsCompleted = true
+        if(this.isContentFinished){
+          this.onFinish()
+        }
+        break;
+      default:
+        console.log('onAdEvent')
     }
   }
 
@@ -169,12 +200,10 @@ export default class player {
   }
 
   onContentPauseRequested() {
-    console.log('onContentPauseRequested')
     this.pause();
   }
 
   onContentResumeRequested() {
-    console.log('onContentResumeRequested')
     this.play();
   }
 

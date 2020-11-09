@@ -39,9 +39,9 @@
             player = new roov.player({
                 src: 'https://storage-roov.mncdigital.com/upload/file/contentpodcasts/untuk-yang-pernah-datang_1598403437.mp3',
                 withAds: true,
-                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpremidpost&cmsid=496&vid=short_onecue&correlator=',
-                onPlaying: () => {
-                    console.log('-----------audio is playing-----------')
+                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpreonly&cmsid=496&vid=short_onecue&correlator=',
+                onPlaying: ({state = 'CONTENT'}) => {
+                    console.log(`-----------${state} is playing-----------`)
                 },
                 onBuffering: () => {
                     console.log('-----------audio is buffering-----------')
@@ -50,14 +50,11 @@
                     console.log("current seconds: "+currentSeconds+", buffered end: "+bufferedEnd)
                 },
                 onTimeUpdate: () => {
-                    console.log('-----------event GA / GTM sent-----------')
+                    //console.log('-----------event GA / GTM sent-----------')
                 },
-                onAdsPlaying: (state) => {
-                    console.log(state)
-                },
-                onAdsFinish: (state) => {
-                    console.log(state)
-                },
+                onFinish: () => {
+                    console.log('next audio occured')
+                }
             })
             player.play()
         })
