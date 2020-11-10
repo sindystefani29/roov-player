@@ -185,7 +185,6 @@ export default class player {
 
   onAdLoaded(event) {
     let ad = event.getAd();
-    this.isAdsLoaded = true
     console.log('onAdLoaded')
     if (!ad.isLinear()) {
       this.play();
@@ -209,10 +208,10 @@ export default class player {
 
   loadAds(event) {
     // Prevent this function from running on if there are already ads loaded
-    if (this._adsLoaded) {
+    if (this.isAdsLoaded) {
       return;
     }
-    this._adsLoaded = true;
+    this.isAdsLoaded = true
 
     // Prevent triggering immediate playback when ads are loading
     event.preventDefault();
@@ -260,7 +259,7 @@ export default class player {
   }
 
   playVideo(){
-    if(!this._withAds || !this.isContentFinished){
+    if((this.isAdsLoaded || !this._withAds) && !this.isContentFinished){
       this._player.play()
     }
   }
