@@ -18,11 +18,15 @@ export default class player {
     this.setupEvent(config);
   }
 
-  initializeAudio({ src = "" }) {
+  initializeAudio({ src = "", autoplay = false }) {
     this._src = src;
     this._player = document.getElementById('roov-player');
     this._player.setAttribute("playsinline", "");
     this._player.src = !this.isHLS() ? src : '';
+    if(autoplay){
+      this._player.muted = true
+      this.play()
+    }
     console.log('isHLS', this.isHLS())
   }
 
