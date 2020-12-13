@@ -90,14 +90,13 @@ export default class player {
     }
     if (onFinish) {
       this._player.addEventListener("ended", onFinishListener = () =>{
-        _onFinishListener = onFinishListener
         if(this.isAllAdsCompleted || !this._withAds){
           onFinish()
         }
+        _onFinishListener = onFinishListener
       });
     }
     this._player.addEventListener("timeupdate", timeupdateListener = () => {
-      _timeupdateListener = timeupdateListener
       if (onTimeUpdate) {
         onTimeUpdate();
       }
@@ -120,6 +119,7 @@ export default class player {
           }
         }
       }
+      _timeupdateListener = timeupdateListener
     });
   }
 
