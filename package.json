@@ -6,7 +6,7 @@
   "scripts": {
     "test": "webpack",
     "build": "webpack",
-    "start": "node app.js",
+    "start": "node app.js -p $PORT",
     "dev": "webpack & node app.js"
   },
   "keywords": [],
