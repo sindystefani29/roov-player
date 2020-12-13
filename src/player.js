@@ -62,45 +62,48 @@ export default class player {
     onBuffering,
     getBufferLength
   }){
-    this.onloaderror = onloaderror;
+    if(this._player.getAttribute('listener') !== 'true'){
+      this.onloaderror = onloaderror;
 
-    if(onPlaying) {
-      this._player.addEventListener("playing", onPlaying);
-    }
-    if(onBuffering) {
-      this._player.addEventListener("waiting", onBuffering);
-    }
-    if (onFinish) {
-      this._player.addEventListener("ended", () =>{
-        if(this.isAllAdsCompleted || !this._withAds){
-          onFinish()
-        }
-      });
-    }
-    this._player.addEventListener("timeupdate", (e) => {
-      if (onTimeUpdate) {
-        onTimeUpdate();
+      if(onPlaying) {
+        this._player.addEventListener("playing", onPlaying);
       }
-      if (getBufferLength) {
-        let bufferedEnd, currentSeconds
-        const buffered = this._player.buffered;
-        const duration = this._player.duration;
-        if (buffered.length > 0) {
-          for (var i = 0; i < buffered.length; i++) {
-            if (buffered.start(buffered.length - 1 - i) < this._player.currentTime) {
-              bufferedEnd = (buffered.end(buffered.length - 1 - i) / duration) * 100
-              currentSeconds = (this._player.currentTime / duration) * 100
-              if (this._hls) {
-                getBufferLength(0, 0);
-              } else {
-                getBufferLength(currentSeconds, bufferedEnd);
+      if(onBuffering) {
+        this._player.addEventListener("waiting", onBuffering);
+      }
+      if (onFinish) {
+        this._player.addEventListener("ended", () =>{
+          if(this.isAllAdsCompleted || !this._withAds){
+            onFinish()
+          }
+        });
+      }
+      this._player.addEventListener("timeupdate", (e) => {
+        if (onTimeUpdate) {
+          onTimeUpdate();
+        }
+        if (getBufferLength) {
+          let bufferedEnd, currentSeconds
+          const buffered = this._player.buffered;
+          const duration = this._player.duration;
+          if (buffered.length > 0) {
+            for (var i = 0; i < buffered.length; i++) {
+              if (buffered.start(buffered.length - 1 - i) < this._player.currentTime) {
+                bufferedEnd = (buffered.end(buffered.length - 1 - i) / duration) * 100
+                currentSeconds = (this._player.currentTime / duration) * 100
+                if (this._hls) {
+                  getBufferLength(0, 0);
+                } else {
+                  getBufferLength(currentSeconds, bufferedEnd);
+                }
+                break;
               }
-              break;
             }
           }
         }
-      }
-    });
+      });
+      this._player.setAttribute("listener", "true");
+    }
   }
 
   initializeIMA() {
