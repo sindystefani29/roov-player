@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript" src="./index.js"></script>
+</head>
+<body>
+    <video controls id="roov-player"></video>
+    <div id="ad-container"></div>
+
+    <script src="//imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
+    <script>
+        let player = new roov.player({
+            src: 'https://content.jwplatform.com/manifests/yp34SRmf.m3u8',
+            autoplay: true
+        })
+        player.play()
+    </script>
+</body>
+</html>

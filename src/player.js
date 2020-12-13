@@ -1,11 +1,14 @@
 import Hls from "hls.js/dist/hls.light";
 
-let adsManager
+let adsManager, _player, _playerConfig, _timeupdateListener, _onFinishListener
 
 export default class player {
   constructor(config) {
     if(adsManager){
       adsManager.destroy()
+    }
+    if(_player){
+      this.destroyPlayer(_playerConfig)
     }
 
     // init audio
@@ -21,6 +24,7 @@ export default class player {
   initializeAudio({ src = "", autoplay = false }) {
     this._src = src;
     this._player = document.getElementById('roov-player');
+    _player = this._player
     this._player.setAttribute("playsinline", "");
     this._player.src = !this.isHLS() ? src : '';
     if(autoplay){
@@ -54,6 +58,16 @@ export default class player {
     }
   }
 
+  destroyPlayer({
+    onPlaying,
+    onBuffering
+  }){
+    _player.removeEventListener("playing", onPlaying);
+    _player.removeEventListener("waiting", onBuffering);
+    _player.removeEventListener("ended", _onFinishListener);
+    _player.removeEventListener("timeupdate", _timeupdateListener);
+  }
+
   setupEvent({
     onPlaying,
     onloaderror,
@@ -62,48 +76,51 @@ export default class player {
     onBuffering,
     getBufferLength
   }){
-    if(this._player.getAttribute('listener') !== 'true'){
-      this.onloaderror = onloaderror;
+    _playerConfig = { onPlaying, onBuffering }
 
-      if(onPlaying) {
-        this._player.addEventListener("playing", onPlaying);
-      }
-      if(onBuffering) {
-        this._player.addEventListener("waiting", onBuffering);
-      }
-      if (onFinish) {
-        this._player.addEventListener("ended", () =>{
-          if(this.isAllAdsCompleted || !this._withAds){
-            onFinish()
-          }
-        });
-      }
-      this._player.addEventListener("timeupdate", (e) => {
-        if (onTimeUpdate) {
-          onTimeUpdate();
+    this.onloaderror = onloaderror;
+
+    let onFinishListener, timeupdateListener
+
+    if(onPlaying) {
+      this._player.addEventListener("playing", onPlaying);
+    }
+    if(onBuffering) {
+      this._player.addEventListener("waiting", onBuffering);
+    }
+    if (onFinish) {
+      this._player.addEventListener("ended", onFinishListener = () =>{
+        _onFinishListener = onFinishListener
+        if(this.isAllAdsCompleted || !this._withAds){
+          onFinish()
         }
-        if (getBufferLength) {
-          let bufferedEnd, currentSeconds
-          const buffered = this._player.buffered;
-          const duration = this._player.duration;
-          if (buffered.length > 0) {
-            for (var i = 0; i < buffered.length; i++) {
-              if (buffered.start(buffered.length - 1 - i) < this._player.currentTime) {
-                bufferedEnd = (buffered.end(buffered.length - 1 - i) / duration) * 100
-                currentSeconds = (this._player.currentTime / duration) * 100
-                if (this._hls) {
-                  getBufferLength(0, 0);
-                } else {
-                  getBufferLength(currentSeconds, bufferedEnd);
-                }
-                break;
+      });
+    }
+    this._player.addEventListener("timeupdate", timeupdateListener = () => {
+      _timeupdateListener = timeupdateListener
+      if (onTimeUpdate) {
+        onTimeUpdate();
+      }
+      if (getBufferLength) {
+        let bufferedEnd, currentSeconds
+        const buffered = this._player.buffered;
+        const duration = this._player.duration;
+        if (buffered.length > 0) {
+          for (var i = 0; i < buffered.length; i++) {
+            if (buffered.start(buffered.length - 1 - i) < this._player.currentTime) {
+              bufferedEnd = (buffered.end(buffered.length - 1 - i) / duration) * 100
+              currentSeconds = (this._player.currentTime / duration) * 100
+              if (this._hls) {
+                getBufferLength(0, 0);
+              } else {
+                getBufferLength(currentSeconds, bufferedEnd);
               }
+              break;
             }
           }
         }
-      });
-      this._player.setAttribute("listener", "true");
-    }
+      }
+    });
   }
 
   initializeIMA() {
