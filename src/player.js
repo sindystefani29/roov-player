@@ -55,6 +55,7 @@ export default class player {
   }
 
   setupEvent({
+    withAds,
     onPlaying,
     onloaderror,
     onFinish,
@@ -72,7 +73,7 @@ export default class player {
     }
     if (onFinish) {
       this._player.addEventListener("ended", () =>{
-        if(this.isAllAdsCompleted || !this._withAds){
+        if(this.isAllAdsCompleted || !this.withAds){
           onFinish()
         }
       });
