@@ -13,6 +13,6 @@ app.get('/video', (req, res) => {
 
 app.use('/', express.static('dist'))
 
-app.listen(port, () => {
+app.listen(process.env.PORT || port, () => {
   console.log(`Example app listening at http://localhost:${port}`)
 })
