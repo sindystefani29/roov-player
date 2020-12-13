@@ -80,7 +80,13 @@ export default class player {
 
     this.onloaderror = onloaderror;
 
-    let onFinishListener, timeupdateListener
+    let timeupdateListener, onFinishListener = () => {
+      if(this.isAllAdsCompleted || !this._withAds){
+        onFinish()
+      }
+    }
+
+    _onFinishListener = onFinishListener
 
     if(onPlaying) {
       this._player.addEventListener("playing", onPlaying);
@@ -88,13 +94,8 @@ export default class player {
     if(onBuffering) {
       this._player.addEventListener("waiting", onBuffering);
     }
-    if (onFinish) {
-      this._player.addEventListener("ended", onFinishListener = () =>{
-        if(this.isAllAdsCompleted || !this._withAds){
-          onFinish()
-        }
-        _onFinishListener = onFinishListener
-      });
+    if(onFinish) {
+      this._player.addEventListener("ended", onFinishListener);
     }
     this._player.addEventListener("timeupdate", timeupdateListener = () => {
       if (onTimeUpdate) {
