@@ -73,7 +73,7 @@ export default class player {
     }
     if (onFinish) {
       this._player.addEventListener("ended", () =>{
-        if(this.isAllAdsCompleted || !this.withAds){
+        if(this.isAllAdsCompleted || !withAds){
           onFinish()
         }
       });
