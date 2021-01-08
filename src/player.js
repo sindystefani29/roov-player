@@ -183,7 +183,9 @@ export default class player {
     switch (e.type) {
       case currentType.STARTED:
         this.isAdsPlaying = true
-        this.onPlaying({ state: 'ADS' })
+        if (this.onPlaying) {
+          this.onPlaying({ state: 'ADS' })
+        }
         break;
       case currentType.AD_BUFFERING:
         this.onBuffering()
@@ -193,7 +195,9 @@ export default class player {
         break;
       case currentType.AD_PROGRESS:
         let adData = e.getAdData();
-        this.getBufferLength(adData.currentTime, adData.duration);
+        if (this.getBufferLength) {
+          this.getBufferLength(adData.currentTime, adData.duration);
+        }
         break;
       case currentType.ALL_ADS_COMPLETED:
         this.isAllAdsCompleted = true

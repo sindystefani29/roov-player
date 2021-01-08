@@ -23,9 +23,9 @@
         let player
         document.getElementById('play-m3u8').addEventListener('click', (e) => {
             player = new roov.player({
-                src: 'https://cogecomedia.leanstream.co/cogecomedia/CKBEFM.stream/playlist.m3u8',
+                src: 'https://content.jwplatform.com/manifests/yp34SRmf.m3u8',
                 withAds: true,
-                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpremidpost&cmsid=496&vid=short_onecue&correlator='
+                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpreonly&cmsid=496&vid=short_onecue&correlator='
             })
             player.play()
         })
@@ -33,7 +33,7 @@
             player = new roov.player({
                 src: 'https://d3ctxlq1ktw2nl.cloudfront.net/staging/2019-3-19/13133706-44100-2-b9a686e417783.m4a',
                 withAds: true,
-                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpremidpost&cmsid=496&vid=short_onecue&correlator='
+                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpreonly&cmsid=496&vid=short_onecue&correlator='
             })
             player.play()
         })
@@ -63,8 +63,8 @@
         document.getElementById('play-radio').addEventListener('click', (e) => {
             player = new roov.player({
                 src: 'http://masima.rastream.com/masima-pramborsjakarta?',
-                withAds: false,
-                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpremidpost&cmsid=496&vid=short_onecue&correlator='
+                withAds: true,
+                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpreonly&cmsid=496&vid=short_onecue&correlator='
             })
             player.play()
         })
