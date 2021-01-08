@@ -1,13 +1,11 @@
-import Hls from "hls.js/dist/hls.light";
-
 let adsManager, _player, _playerConfig, _timeupdateListener, _onFinishListener
 
 export default class player {
   constructor(config) {
-    if(adsManager){
+    if (adsManager) {
       adsManager.destroy()
     }
-    if(_player){
+    if (_player) {
       this.destroyPlayer(_playerConfig)
     }
 
@@ -27,16 +25,16 @@ export default class player {
     _player = this._player
     this._player.setAttribute("playsinline", "");
     this._player.src = !this.isHLS() ? src : '';
-    if(autoplay){
+    if (autoplay) {
       this._player.muted = true
       this.play()
     }
     console.log('isHLS', this.isHLS())
   }
 
-  initializeConfigAds({ 
-    withAds = false, 
-    adElement = "ad-container", 
+  initializeConfigAds({
+    withAds = false,
+    adElement = "ad-container",
     adsURL,
     onPlaying,
     onBuffering,
@@ -61,7 +59,7 @@ export default class player {
   destroyPlayer({
     onPlaying,
     onBuffering
-  }){
+  }) {
     _player.removeEventListener("playing", onPlaying);
     _player.removeEventListener("waiting", onBuffering);
     _player.removeEventListener("ended", _onFinishListener);
@@ -75,26 +73,26 @@ export default class player {
     onTimeUpdate,
     onBuffering,
     getBufferLength
-  }){
+  }) {
     _playerConfig = { onPlaying, onBuffering }
 
     this.onloaderror = onloaderror;
 
     let timeupdateListener, onFinishListener = () => {
-      if(this.isAllAdsCompleted || !this._withAds){
+      if (this.isAllAdsCompleted || !this._withAds) {
         onFinish()
       }
     }
 
     _onFinishListener = onFinishListener
 
-    if(onPlaying) {
+    if (onPlaying) {
       this._player.addEventListener("playing", onPlaying);
     }
-    if(onBuffering) {
+    if (onBuffering) {
       this._player.addEventListener("waiting", onBuffering);
     }
-    if(onFinish) {
+    if (onFinish) {
       this._player.addEventListener("ended", onFinishListener);
     }
     this._player.addEventListener("timeupdate", timeupdateListener = () => {
@@ -133,12 +131,12 @@ export default class player {
     this._adDisplayContainer = new google.ima.AdDisplayContainer(this._adContainer, this._player);
     this._adsLoader = new google.ima.AdsLoader(this._adDisplayContainer);
 
-    this._adsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, (e) => { 
-      this.onAdsManagerLoaded(e) 
+    this._adsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, (e) => {
+      this.onAdsManagerLoaded(e)
     }, false);
 
-    this._adsLoader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, (e) => { 
-      this.onAdError(e) 
+    this._adsLoader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, (e) => {
+      this.onAdError(e)
     }, false);
 
     this._player.addEventListener('ended', () => {
@@ -180,12 +178,12 @@ export default class player {
     this.loadAds(event)
   }
 
-  onAdEvent(e){
+  onAdEvent(e) {
     const currentType = google.ima.AdEvent.Type
-    switch(e.type){
+    switch (e.type) {
       case currentType.STARTED:
         this.isAdsPlaying = true
-        this.onPlaying({state: 'ADS'})
+        this.onPlaying({ state: 'ADS' })
         break;
       case currentType.AD_BUFFERING:
         this.onBuffering()
@@ -199,7 +197,7 @@ export default class player {
         break;
       case currentType.ALL_ADS_COMPLETED:
         this.isAllAdsCompleted = true
-        if(this.isContentFinished){
+        if (this.isContentFinished) {
           this.onFinish()
         }
         break;
@@ -258,33 +256,35 @@ export default class player {
     }
   }
 
-  play(){
-    if(this.isAdsPlaying){
+  play() {
+    if (this.isAdsPlaying) {
       this._adsManager.resume()
       return;
     }
-    if(this.isHLS()){
-      if (Hls.isSupported()) {
-        this._hls = new Hls();
-        this._hls.loadSource(this._src);
-        this._hls.attachMedia(this._player);
-        this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          this.playVideo()
-        });
-      }
-      else if (this._player.canPlayType('application/vnd.apple.mpegurl')) {
-        this._player.src = this._src;
-        this._player.addEventListener('loadedmetadata', () => {
-          this.playVideo()
-        });
-      }
-    }else{
+    if (this.isHLS()) {
+      import(/* webpackChunkName: "Hls" */ 'hls.js/dist/hls.light').then(({ default: Hls }) => {
+        if (Hls.isSupported()) {
+          this._hls = new Hls();
+          this._hls.loadSource(this._src);
+          this._hls.attachMedia(this._player);
+          this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            this.playVideo()
+          });
+        }
+        else if (this._player.canPlayType('application/vnd.apple.mpegurl')) {
+          this._player.src = this._src;
+          this._player.addEventListener('loadedmetadata', () => {
+            this.playVideo()
+          });
+        }
+      });
+    } else {
       this.playVideo()
     }
   }
 
-  playVideo(){
-    if((this.isAdsLoaded || !this._withAds) && !this.isContentFinished){
+  playVideo() {
+    if ((this.isAdsLoaded || !this._withAds) && !this.isContentFinished) {
       this._player.play()
     }
   }
@@ -295,7 +295,7 @@ export default class player {
 
   pause() {
     this._player.pause()
-    if(this.isAdsPlaying){
+    if (this.isAdsPlaying) {
       this._adsManager.pause()
     }
   }

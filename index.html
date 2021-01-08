@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <script type="text/javascript" src="./index.js"></script>
 </head>
+
 <body>
     <video controls id="roov-player" style="display: none;"></video>
     <button id="play-m3u8">Play m3u8</button>
@@ -40,14 +42,14 @@
                 src: 'https://storage-roov.mncdigital.com/upload/file/contentpodcasts/untuk-yang-pernah-datang_1598403437.mp3',
                 withAds: true,
                 adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpreonly&cmsid=496&vid=short_onecue&correlator=',
-                onPlaying: ({state = 'CONTENT'}) => {
+                onPlaying: ({ state = 'CONTENT' }) => {
                     console.log(`-----------${state} is playing-----------`)
                 },
                 onBuffering: () => {
                     console.log('-----------audio is buffering-----------')
                 },
                 getBufferLength: (currentSeconds, bufferedEnd) => {
-                    console.log("current seconds: "+currentSeconds+", buffered end: "+bufferedEnd)
+                    console.log("current seconds: " + currentSeconds + ", buffered end: " + bufferedEnd)
                 },
                 onTimeUpdate: () => {
                     //console.log('-----------event GA / GTM sent-----------')
@@ -74,4 +76,5 @@
         })
     </script>
 </body>
+
 </html>

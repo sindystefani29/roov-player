@@ -1,3 +1,3 @@
 import player from './player.js'
 
-export {player}
+export { player }

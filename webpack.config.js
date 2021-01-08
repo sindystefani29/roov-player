@@ -2,13 +2,14 @@ const path = require("path");
 const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
-    entry: path.resolve(__dirname, "src/index.js"),
+    entry: {
+        index: path.resolve(__dirname, "src/index.js")
+    },
     output: {
         path: path.resolve(__dirname, "dist"),
-        filename: "index.js",
+        filename: "[name].js",
         library: "roov",
-        libraryTarget: "umd",
-        globalObject: `typeof self !== 'undefined' ? self : this`
+        libraryTarget: "umd"
     },
     module: {
         rules: [
