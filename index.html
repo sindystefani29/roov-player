@@ -19,8 +19,8 @@
     <div id="ad-container"></div>
 
     <script src="//imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
-    <script type="text/javascript" src="/conviva-core-sdk.min.js"></script>
-    <script type="text/javascript" src="/conviva-html5native-impl.js"></script>
+    <script type="text/javascript" src="/conviva-core-sdk.debug.js"></script>
+    <script type="text/javascript" src="/conviva-core-sdk.js"></script>
     <script>
         let player
         document.getElementById('play-m3u8').addEventListener('click', (e) => {
@@ -62,7 +62,12 @@
                 convivaConfig: {
                     debug: true,
                     isLive: false,
-                    CUSTOMER_KEY: 'ffc2bacab709e3c5eedc49af6520b33d3c204182'
+                    assetName: 'trial assetName',
+                    TEST_CUSTOMER_KEY: 'ffc2bacab709e3c5eedc49af6520b33d3c204182',
+                    PRODUCTION_CUSTOMER_KEY: 'ff84ae928c3b33064b76dec08f12500465e59a6f',
+                    gatewayUrl: 'https://rcti.testonly.conviva.com',
+                    customTags: {},
+                    deviceTags: {}
                 }
             })
             player.play()

@@ -10,11 +10,11 @@ app.get('/', (req, res) => {
 app.get('/video', (req, res) => {
   res.sendFile(path.join(__dirname + '/video.html'));
 })
-app.get('/conviva-core-sdk.min.js', (req, res) => {
-  res.sendFile(path.join(__dirname + '/conviva/conviva-core-sdk.min.js'));
+app.get('/conviva-core-sdk.debug.js', (req, res) => {
+  res.sendFile(path.join(__dirname + '/conviva/conviva-core-sdk.debug.js'));
 })
-app.get('/conviva-html5native-impl.js', (req, res) => {
-  res.sendFile(path.join(__dirname + '/conviva/conviva-html5native-impl.js'));
+app.get('/conviva-core-sdk.js', (req, res) => {
+  res.sendFile(path.join(__dirname + '/conviva/conviva-core-sdk.js'));
 })
 
 app.use('/', express.static('dist'))

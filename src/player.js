@@ -1,16 +1,29 @@
+import { name as pkgName, version as pkgVersion } from '../package.json'
 let adsManager, _player, _playerConfig, _timeupdateListener, _onFinishListener
 let configs = {
   content: {
-    //bitrateKbps: 200,
-    assetName: 'Roov Player Conviva Application',
+    assetName: '',
     live: false,
     url: "",
     contentLength: 0,
-    applicationName: 'Roov Player V3',
-    viewerId: "Viewer ID",
-    tags: { "aa": "bb" }, // Custom metadata
-    CUSTOMER_KEY: "YOUR CONVIVA CUSTOMER KEY",
-    gatewayUrl: 'https://rcti.testonly.conviva.com'
+    frameworkName: 'HTML 5',
+    frameworkVersion: '0.0.0',
+    applicationName: pkgName,
+    applicationVersion: pkgVersion,
+    viewerId: "",
+    customTags: {}, // Custom metadata
+    deviceTags: {
+      brand: '',
+      manufacturer: '',
+      model: '',
+      type: '',
+      os_name: '',
+      os_version: '',
+      category: ''
+    },
+    TEST_CUSTOMER_KEY: "YOUR CONVIVA TEST CUSTOMER KEY",
+    PRODUCTION_CUSTOMER_KEY: 'YOUR CONVIVA PRODUCTION CUSTOMER KEY',
+    gatewayUrl: '',
   }
 };
 
@@ -40,31 +53,24 @@ export default class player {
     this._player.setAttribute("playsinline", "");
     this._player.src = !this.isHLS() ? src : '';
     if (convivaConfig) {
-      this.videoElement = _player;
-      this.URL = this._src;
-      this.debug = true;
-      this.isLive = convivaConfig.isLive;
-      this.duration = this.duration();
-      this.CUSTOMER_KEY = convivaConfig.CUSTOMER_KEY;
+      //set conviva info state
+      this.convivaContentInfo = {}
+      this.convivaDeviceMetadata = {}
 
-      this.systemSettings = null;
-      this.systemInterface = null;
-      this.clientSettings = null;
-      this.systemFactory = null;
-      this.client = null;
-
-      this.contentMetadata = null;
-      this.contentSessionKey = null;
-
-      this.contentSessionKey = null;
-      this.playerStateManager = null;
-      this.html5PlayerInterface = null;
+      //set convivaDebug state
+      this.convivaDebug = convivaConfig.debug;
 
       // Change the configs values for the corresponding stream properties values
-      configs.content.live = this.isLive;
-      configs.content.url = this.URL;
-      configs.content.contentLength = this.duration;
-      configs.content.CUSTOMER_KEY = this.CUSTOMER_KEY;
+      configs.content.assetName = convivaConfig.assetName;
+      configs.content.live = convivaConfig.isLive;
+      configs.content.url = this._src;
+      configs.content.contentLength = this.duration();
+      configs.content.TEST_CUSTOMER_KEY = convivaConfig.TEST_CUSTOMER_KEY;
+      configs.content.PRODUCTION_CUSTOMER_KEY = convivaConfig.PRODUCTION_CUSTOMER_KEY;
+      configs.content.gatewayUrl = convivaConfig.gatewayUrl;
+      configs.content.customTags = convivaConfig.customTags;
+      configs.content.deviceTags = convivaConfig.deviceTags;
+      //call setup conviva function
       this.setupConviva()
     }
     if (autoplay) {
@@ -165,176 +171,56 @@ export default class player {
   }
 
   setupConviva() {
-    this.initConvivaClient();
-    this.createContentSession();
-    // Example of creating a custom tag
-    this.createCustomTag("a", "20", false);
-    // It is neccessary to call this method to update the metadata on Conviva side
-    this.updateContentMetadata();
+    this.initConvivaClient()
   }
   // Initializes the Conviva Client
   initConvivaClient() {
-    // Encapsulates all Conviva system settings.
-    this.systemSettings = new Conviva.SystemSettings();
-
-    if (this.debug) {
-      // Show all logs
-      this.systemSettings.LogLevel = Conviva.SystemSettings.LogLevel.DEBUG;
+    if (this.convivaDebug) {
+      var settings = {};
+      settings[Conviva.Constants.GATEWAY_URL] = configs.content.gatewayUrl;
+      settings[Conviva.Constants.LOG_LEVEL] = Conviva.Constants.LogLevel.DEBUG;
+      Conviva.Analytics.init(configs.content.TEST_CUSTOMER_KEY, null, settings);
+    } else {
+      // production release
+      Conviva.Analytics.init(configs.content.PRODUCTION_CUSTOMER_KEY, null);
     }
-    else {
-      // Show no logs
-      this.systemSettings.LogLevel = Conviva.SystemSettings.LogLevel.NONE;
-    }
-
-    // Switch to false during production environment
-    this.systemSettings.allowUncaughtExceptions = true;
-
-    // Used by the Conviva library to access system information and utilities.
-    this.systemInterface = new Conviva.SystemInterface(
-      new Conviva.Impl.Html5Time(),
-      new Conviva.Impl.Html5Timer(),
-      new Conviva.Impl.Html5Http(),
-      new Conviva.Impl.Html5Storage(),
-      new Conviva.Impl.Html5Metadata(),
-      new Conviva.Impl.Html5Logging()
-    );
-
-    this.clientSettings = new Conviva.ClientSettings(configs.content.CUSTOMER_KEY);
-
-    if (configs.content.gatewayUrl != undefined) {
-      this.clientSettings.gatewayUrl = configs.content.gatewayUrl;
-    }
-
-    // Provides access to system information and utilities according to chosen settings.
-    this.systemFactory = new Conviva.SystemFactory(this.systemInterface, this.systemSettings);
-
-    /*
-    Main Conviva class.
-    Most applications will only need one Client, created during application initialization and released during application shutdown.
-    */
-    this.client = new Conviva.Client(this.clientSettings, this.systemFactory);
-
-  }
-  // Create a Conviva monitoring session.
-  createContentSession() {
-
-    this.buildConvivaContentMetadata();
-
-    this.contentSessionKey = this.client.createSession(this.contentMetadata);
-    if (this.contentSessionKey === Conviva.Client.NO_SESSION_KEY) {
-      //console.log("Error session key couldn't be created");
-    }
-
-    this.playerStateManager = this.client.getPlayerStateManager();
-    this.html5PlayerInterface = new Conviva.Impl.Html5PlayerInterface(this.playerStateManager, this.videoElement, this.systemFactory);
-
-    this.attachPlayer(this.contentSessionKey, this.playerStateManager);
-
-    this.videoElement.addEventListener('ended', () => {
-      // Cleanup Content Session if postroll is not enabled
-      this.cleanupContentSession();
-
-    });
+    this.videoAnalytics = Conviva.Analytics.buildVideoAnalytics();
+    this.adAnalytics = Conviva.Analytics.buildAdAnalytics(this.videoAnalytics);
   }
 
-  attachPlayer(sessionKey, stateManager) {
-    if (this.client != null && sessionKey != Conviva.Client.NO_SESSION_KEY) {
-      this.client.attachPlayer(sessionKey, stateManager);
+  reportPlaybackStart() {
+    for (let key in configs.content.tags) {
+      this.convivaContentInfo[key] = configs.content.tags[key];
     }
+    this.videoAnalytics.reportPlaybackRequested(this.convivaContentInfo);
   }
 
-  cleanupContentSession() {
-
-    if (this.contentSessionKey != Conviva.Client.NO_SESSION_KEY) {
-      this.html5PlayerInterface.cleanup();
-      this.html5PlayerInterface = null;
-
-      this.client.releasePlayerStateManager(this.playerStateManager);
-      this.playerStateManager = null;
-
-      this.client.cleanupSession(this.contentSessionKey);
-      this.contentSessionKey = Conviva.Client.NO_SESSION_KEY;
-    }
-    // Release Conviva Client if required during cleanupSession or only during exiting of application
-    this.releaseConvivaClient();
+  reportPlaybackEnd() {
+    this.videoAnalytics.reportPlaybackEnded();
   }
 
-  releaseConvivaClient() {
-    if (this.client != null) {
-      this.client.release();
-      this.client = null;
-    }
-
-    if (this.systemFactory != null) {
-      // If Client was the only consumer of systemFactory, release systemFactory as well.
-      this.systemFactory.release();
-      this.systemFactory = null;
-    }
+  setVideoMetadata() {
+    this.convivaContentInfo[Conviva.Constants.STREAM_URL] = configs.content.url
+    this.convivaContentInfo[Conviva.Constants.ASSET_NAME] = configs.content.assetName
+    this.convivaContentInfo[Conviva.Constants.IS_LIVE] = configs.content.live ? Conviva.Constants.StreamType.LIVE : Conviva.Constants.StreamType.VOD
+    this.convivaContentInfo[Conviva.Constants.PLAYER_NAME] = configs.content.applicationName
+    this.convivaContentInfo[Conviva.Constants.VIEWER_ID] = configs.content.viewerId
+    this.convivaContentInfo[Conviva.Constants.DEFAULT_RESOURCE] = 'Resource Unknown'
+    this.convivaContentInfo[Conviva.Constants.DURATION] = configs.content.contentLength
+    this.convivaContentInfo[Conviva.Constants.ENCODED_FRAMERATE] = 0
+    this.convivaContentInfo[Conviva.Constants.FRAMEWORK_NAME] = configs.content.frameworkName
+    this.convivaContentInfo[Conviva.Constants.FRAMEWORK_VERSION] = configs.content.frameworkVersion
+    this.convivaContentInfo[Conviva.Constants.APPLICATION_VERSION] = configs.content.applicationVersion
   }
 
-  // Create a new custom tag, if the tag already exits in the config object depending on the "update" parameter the tag value will be updated or not
-  createCustomTag(tag, value, update) {
-
-    if (configs.content.tags[tag] == null && configs.content.tags[tag] == undefined) {
-      configs.content.tags[tag] = value;
-      //console.log("add tag", configs.content.tags);
-    }
-    else {
-      //console.log("Tag is already created");
-      if (update) {
-        configs.content.tags[tag] = value;
-        //console.log(tag + " value is updated");
-      }
-    }
-
-    this.buildConvivaContentMetadata();
-  }
-
-  // Create the metadata
-  buildContentMetadata(credentials) {
-    //console.log("metadata", configs.content);
-    if (this.contentMetadata != null) {
-      if (credentials.assetName != null) {
-        this.contentMetadata.assetName = credentials.assetName;
-      }
-      if (credentials.url != null) {
-        this.contentMetadata.streamUrl = credentials.url;
-      }
-      if (credentials.live != null) {
-        this.contentMetadata.streamType = credentials.live ? Conviva.ContentMetadata.StreamType.LIVE : Conviva.ContentMetadata.StreamType.VOD;
-      }
-      if (credentials.applicationName != null) {
-        this.contentMetadata.applicationName = credentials.applicationName;
-      }
-      if (credentials.viewerId != null) {
-        this.contentMetadata.viewerId = credentials.viewerId;
-      }
-      if (credentials.tags != undefined) {
-        Object.assign(this.contentMetadata.custom, credentials.tags);
-      }
-      if (credentials.contentLength != undefined) {
-        this.contentMetadata.duration = credentials.contentLength;
-      }
-
-    }
-  }
-
-  buildConvivaContentMetadata() {
-    this.contentMetadata = new Conviva.ContentMetadata();
-    let credentials = configs.content;
-    if (credentials != null) {
-      //Create metadata
-      this.buildContentMetadata(credentials);
-    }
-  }
-
-  updateContentMetadata() {
-
-    this.buildConvivaContentMetadata();
-
-    if (this.contentSessionKey != null && this.client != null) {
-      this.client.updateContentMetadata(this.contentSessionKey, this.contentMetadata);
-    }
+  setDeviceMetaData() {
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.BRAND] = configs.content.deviceTags.brand
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.MANUFACTURER] = configs.content.deviceTags.manufacturer
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.MODEL] = configs.content.deviceTags.model
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.TYPE] = configs.content.deviceTags.type === 'desktop' ? Conviva.Constants.DeviceType.DESKTOP : configs.content.deviceTags.type === 'mobile' ? Conviva.Constants.DeviceType.MOBILE : Conviva.Constants.DeviceType.CONSOLE_LOG
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.OS_NAME] = configs.content.deviceTags.os_name
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.OS_VERSION] = configs.content.deviceTags.os_version
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.CATEGORY] = configs.content.deviceTags.category == 'android' ? Conviva.Constants.DeviceCategory.ANDROID : configs.content.deviceTags.category == 'ios' ? Conviva.Constants.DeviceCategory.IOS : Conviva.Constants.DeviceCategory.WEB
   }
 
   initializeIMA() {
@@ -354,10 +240,19 @@ export default class player {
       this.onAdError(e)
     }, false);
 
-    this._player.addEventListener('ended', () => {
+    let contentEndedListener = () => {
       this._adsLoader.contentComplete();
       this.isContentFinished = true //prevent post-roll to re-play the content
-    })
+      console.log('config 4')
+    }
+
+    this._player.onended = contentEndedListener
+
+    // this._player.addEventListener('ended', () => {
+    //   this._adsLoader.contentComplete();
+    //   this.isContentFinished = true //prevent post-roll to re-play the content
+    //   console.log('config 4')
+    // })
 
     this._adsRequest = new google.ima.AdsRequest();
     this._adsRequest.adTagUrl = this._adsURL
