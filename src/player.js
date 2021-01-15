@@ -1,5 +1,6 @@
 import { name as pkgName, version as pkgVersion } from '../package.json'
-let adsManager, _player, _playerConfig, _timeupdateListener, _onFinishListener
+let adsManager, adsLoader, adDisplayContainer
+let _player, _playerConfig, _timeupdateListener, _onFinishListener
 let configs = {
   content: {
     assetName: '',
@@ -100,7 +101,6 @@ export default class player {
       this.onBuffering = onBuffering
       this.getBufferLength = getBufferLength
       this.onFinish = onFinish
-      this.initializeIMA();
     }
   }
 
@@ -223,69 +223,87 @@ export default class player {
     this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.CATEGORY] = configs.content.deviceTags.category == 'android' ? Conviva.Constants.DeviceCategory.ANDROID : configs.content.deviceTags.category == 'ios' ? Conviva.Constants.DeviceCategory.IOS : Conviva.Constants.DeviceCategory.WEB
   }
 
-  initializeIMA() {
-    console.log('initializing IMA')
-    this._adContainer = document.getElementById(this._adElement)
-    // this._adContainer.addEventListener('click', () => { 
-    //   this.adContainerClick() 
-    // });
-    this._adDisplayContainer = new google.ima.AdDisplayContainer(this._adContainer, this._player);
-    this._adsLoader = new google.ima.AdsLoader(this._adDisplayContainer);
-
-    this._adsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, (e) => {
-      this.onAdsManagerLoaded(e)
-    }, false);
-
-    this._adsLoader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, (e) => {
-      this.onAdError(e)
-    }, false);
+  setUpIMA() {
+    this.createAdDisplayContainer();
+    adsLoader = new google.ima.AdsLoader(adDisplayContainer);
+    adsLoader.addEventListener(
+      google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
+      (e) => { this.onAdsManagerLoaded(e) },
+      false);
+    adsLoader.addEventListener(
+      google.ima.AdErrorEvent.Type.AD_ERROR,
+      (e) => { this.onAdError(e) },
+      false);
 
     let contentEndedListener = () => {
-      this._adsLoader.contentComplete();
+      adsLoader.contentComplete();
       this.isContentFinished = true //prevent post-roll to re-play the content
-      console.log('config 4')
     }
+    this._player.onended = contentEndedListener;
 
-    this._player.onended = contentEndedListener
+    var adsRequest = new google.ima.AdsRequest();
+    adsRequest.adTagUrl = this._adsURL;
+    adsRequest.linearAdSlotWidth = this._player.clientWidth;
+    adsRequest.linearAdSlotHeight = this._player.clientHeight;
 
-    // this._player.addEventListener('ended', () => {
-    //   this._adsLoader.contentComplete();
-    //   this.isContentFinished = true //prevent post-roll to re-play the content
-    //   console.log('config 4')
-    // })
+    adsRequest.nonLinearAdSlotWidth = this._player.clientWidth;
+    adsRequest.nonLinearAdSlotHeight = this._player.clientHeight;
 
-    this._adsRequest = new google.ima.AdsRequest();
-    this._adsRequest.adTagUrl = this._adsURL
-
-    this._adsRequest.linearAdSlotWidth = this._player.clientWidth;
-    this._adsRequest.linearAdSlotHeight = this._player.clientHeight;
-    this._adsRequest.nonLinearAdSlotWidth = this._player.clientWidth;
-    this._adsRequest.nonLinearAdSlotHeight = this._player.clientHeight / 3;
-
-    this._adsLoader.requestAds(this._adsRequest);
+    adsLoader.requestAds(adsRequest);
   }
-  // adContainerClick() {
-  //   console.log("ad container clicked");
-  //   if (this._player.paused) {
-  //     this.play();
-  //   } else {
-  //     this.pause();
-  //   }
-  // }
-  onAdsManagerLoaded(event) {
-    console.log('onAdsManagerLoaded')
-    this._adsManager = event.getAdsManager(this._player);
-    adsManager = this._adsManager
-    this._adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, (e) => { this.onAdError(e) });
-    this._adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED, () => { this.onContentPauseRequested() });
-    this._adsManager.addEventListener(google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED, () => { this.onContentResumeRequested() });
-    this._adsManager.addEventListener(google.ima.AdEvent.Type.LOADED, (e) => { this.onAdLoaded(e) });
-    this._adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, (e) => { this.onAdEvent(e) });
-    this._adsManager.addEventListener(google.ima.AdEvent.Type.COMPLETE, (e) => { this.onAdEvent(e) });
-    this._adsManager.addEventListener(google.ima.AdEvent.Type.AD_BUFFERING, (e) => { this.onAdEvent(e) });
-    this._adsManager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, (e) => { this.onAdEvent(e) });
-    this._adsManager.addEventListener(google.ima.AdEvent.Type.AD_PROGRESS, (e) => { this.onAdEvent(e) });
-    this.loadAds(event)
+
+
+  createAdDisplayContainer() {
+    adDisplayContainer = new google.ima.AdDisplayContainer(
+      document.getElementById('ad-container'), this._player);
+  }
+
+  playAds() {
+    this._player.load();
+    adDisplayContainer.initialize();
+
+    let width = this._player.clientWidth;
+    let height = this._player.clientHeight;
+
+    try {
+      adsManager.init(width, height, google.ima.ViewMode.NORMAL);
+      adsManager.start();
+    } catch (adError) {
+      console.log("AdsManager could not be started", adError);
+      this._player.play();
+    }
+  }
+
+  onAdsManagerLoaded(adsManagerLoadedEvent) {
+    // Get the ads manager.
+    var adsRenderingSettings = new google.ima.AdsRenderingSettings();
+    adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = true;
+    adsManager = adsManagerLoadedEvent.getAdsManager(
+      this._player, adsRenderingSettings);
+
+    adsManager.addEventListener(
+      google.ima.AdErrorEvent.Type.AD_ERROR,
+      (e) => { this.onAdError(e) });
+    adsManager.addEventListener(
+      google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED,
+      (e) => { this.onContentPauseRequested(e) });
+    adsManager.addEventListener(
+      google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED,
+      (e) => { this.onContentResumeRequested(e) });
+    adsManager.addEventListener(
+      google.ima.AdEvent.Type.ALL_ADS_COMPLETED,
+      (e) => { this.onAdEvent(e) });
+
+    adsManager.addEventListener(
+      google.ima.AdEvent.Type.LOADED,
+      (e) => { this.onAdEvent(e) });
+    adsManager.addEventListener(
+      google.ima.AdEvent.Type.STARTED,
+      (e) => { this.onAdEvent(e) });
+    adsManager.addEventListener(
+      google.ima.AdEvent.Type.COMPLETE,
+      (e) => { this.onAdEvent(e) });
+    this.playAds()
   }
 
   onAdEvent(e) {
@@ -320,59 +338,22 @@ export default class player {
     }
   }
 
-  onAdLoaded(event) {
-    let ad = event.getAd();
-    console.log('onAdLoaded')
-    if (!ad.isLinear()) {
-      this.play();
-    }
-  }
-
-  onAdError(event) {
-    console.log(event.getError());
-    if (this._adsManager) {
-      this._adsManager.destroy();
-    }
+  onAdError(adErrorEvent) {
+    console.log(adErrorEvent.getError());
+    adsManager.destroy();
   }
 
   onContentPauseRequested() {
-    this.pause();
+    this._player.pause();
   }
 
   onContentResumeRequested() {
-    this.play();
-  }
-
-  loadAds(event) {
-    // Prevent this function from running on if there are already ads loaded
-    if (this.isAdsLoaded) {
-      return;
-    }
-    this.isAdsLoaded = true
-
-    // Prevent triggering immediate playback when ads are loading
-    event.preventDefault();
-
-    console.log("loading ads");
-
-    this._player.load();
-    this._adDisplayContainer.initialize();
-
-    let width = this._player.clientWidth;
-    let height = this._player.clientHeight;
-    try {
-      this._adsManager.init(width, height, google.ima.ViewMode.NORMAL);
-      this._adsManager.start();
-    } catch (adError) {
-      // Play the video without ads, if an error occurs
-      console.log("AdsManager could not be started", adError);
-      this.play();
-    }
+    this._player.play();
   }
 
   play() {
     if (this.isAdsPlaying) {
-      this._adsManager.resume()
+      adsManager.resume()
       return;
     }
     if (this.isHLS()) {
@@ -400,6 +381,8 @@ export default class player {
   playVideo() {
     if ((this.isAdsLoaded || !this._withAds) && !this.isContentFinished) {
       this._player.play()
+    } else if (this._withAds) {
+      this.setUpIMA()
     }
   }
 
@@ -410,14 +393,14 @@ export default class player {
   pause() {
     this._player.pause()
     if (this.isAdsPlaying) {
-      this._adsManager.pause()
+      adsManager.pause()
     }
   }
 
   volume(v) {
-    if (this._adsManager) {
-      if (Object.keys(this._adsManager).length != 0) {
-        this._adsManager.setVolume(v);
+    if (adsManager) {
+      if (Object.keys(adsManager).length != 0) {
+        adsManager.setVolume(v);
       }
     }
     this._player.volume = v;

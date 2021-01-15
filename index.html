@@ -27,7 +27,32 @@
             player = new roov.player({
                 src: 'https://content.jwplatform.com/manifests/yp34SRmf.m3u8',
                 withAds: true,
-                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpreonly&cmsid=496&vid=short_onecue&correlator='
+                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpreonly&cmsid=496&vid=short_onecue&correlator=',
+                onPlaying: ({ state = 'CONTENT' }) => {
+                    console.log(`-----------${state} is playing-----------`)
+                },
+                onBuffering: () => {
+                    console.log('-----------audio is buffering-----------')
+                },
+                getBufferLength: (currentSeconds, bufferedEnd) => {
+                    console.log("current seconds: " + currentSeconds + ", buffered end: " + bufferedEnd)
+                },
+                onTimeUpdate: () => {
+                    //console.log('-----------event GA / GTM sent-----------')
+                },
+                onFinish: () => {
+                    console.log('next audio occured')
+                },
+                convivaConfig: {
+                    debug: true,
+                    isLive: false,
+                    assetName: 'trial assetName',
+                    TEST_CUSTOMER_KEY: 'ffc2bacab709e3c5eedc49af6520b33d3c204182',
+                    PRODUCTION_CUSTOMER_KEY: 'ff84ae928c3b33064b76dec08f12500465e59a6f',
+                    gatewayUrl: 'https://rcti.testonly.conviva.com',
+                    customTags: {},
+                    deviceTags: {}
+                }
             })
             player.play()
         })
@@ -35,7 +60,32 @@
             player = new roov.player({
                 src: 'https://d3ctxlq1ktw2nl.cloudfront.net/staging/2019-3-19/13133706-44100-2-b9a686e417783.m4a',
                 withAds: true,
-                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpreonly&cmsid=496&vid=short_onecue&correlator='
+                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpreonly&cmsid=496&vid=short_onecue&correlator=',
+                onPlaying: ({ state = 'CONTENT' }) => {
+                    console.log(`-----------${state} is playing-----------`)
+                },
+                onBuffering: () => {
+                    console.log('-----------audio is buffering-----------')
+                },
+                getBufferLength: (currentSeconds, bufferedEnd) => {
+                    console.log("current seconds: " + currentSeconds + ", buffered end: " + bufferedEnd)
+                },
+                onTimeUpdate: () => {
+                    //console.log('-----------event GA / GTM sent-----------')
+                },
+                onFinish: () => {
+                    console.log('next audio occured')
+                },
+                convivaConfig: {
+                    debug: true,
+                    isLive: false,
+                    assetName: 'trial assetName',
+                    TEST_CUSTOMER_KEY: 'ffc2bacab709e3c5eedc49af6520b33d3c204182',
+                    PRODUCTION_CUSTOMER_KEY: 'ff84ae928c3b33064b76dec08f12500465e59a6f',
+                    gatewayUrl: 'https://rcti.testonly.conviva.com',
+                    customTags: {},
+                    deviceTags: {}
+                }
             })
             player.play()
         })
@@ -76,7 +126,32 @@
             player = new roov.player({
                 src: 'http://masima.rastream.com/masima-pramborsjakarta?',
                 withAds: true,
-                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpreonly&cmsid=496&vid=short_onecue&correlator='
+                adsURL: 'https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpreonly&cmsid=496&vid=short_onecue&correlator=',
+                onPlaying: ({ state = 'CONTENT' }) => {
+                    console.log(`-----------${state} is playing-----------`)
+                },
+                onBuffering: () => {
+                    console.log('-----------audio is buffering-----------')
+                },
+                getBufferLength: (currentSeconds, bufferedEnd) => {
+                    console.log("current seconds: " + currentSeconds + ", buffered end: " + bufferedEnd)
+                },
+                onTimeUpdate: () => {
+                    //console.log('-----------event GA / GTM sent-----------')
+                },
+                onFinish: () => {
+                    console.log('next audio occured')
+                },
+                convivaConfig: {
+                    debug: true,
+                    isLive: false,
+                    assetName: 'trial assetName',
+                    TEST_CUSTOMER_KEY: 'ffc2bacab709e3c5eedc49af6520b33d3c204182',
+                    PRODUCTION_CUSTOMER_KEY: 'ff84ae928c3b33064b76dec08f12500465e59a6f',
+                    gatewayUrl: 'https://rcti.testonly.conviva.com',
+                    customTags: {},
+                    deviceTags: {}
+                }
             })
             player.play()
         })
