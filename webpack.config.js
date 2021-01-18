@@ -10,7 +10,8 @@ module.exports = {
         filename: "[name].js",
         library: "roov",
         libraryTarget: "umd",
-        globalObject: `this`
+        globalObject: `this`,
+        publicPath: '',
     },
     module: {
         rules: [
