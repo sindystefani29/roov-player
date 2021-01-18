@@ -101,6 +101,7 @@ export default class player {
       this.onBuffering = onBuffering
       this.getBufferLength = getBufferLength
       this.onFinish = onFinish
+      this.setUpIMA()
     }
   }
 
@@ -147,7 +148,7 @@ export default class player {
       if (onTimeUpdate) {
         onTimeUpdate();
       }
-      if (getBufferLength) {
+      if (getBufferLength && !this.isAdsPlaying) {
         let bufferedEnd, currentSeconds
         const buffered = this._player.buffered;
         const duration = this._player.duration;
@@ -160,6 +161,9 @@ export default class player {
                 getBufferLength(0, 0);
               } else {
                 getBufferLength(currentSeconds, bufferedEnd);
+                if ((currentSeconds == 100) && (bufferedEnd == 100)) {
+                  this.isPostrollAllowed = true
+                }
               }
               break;
             }
@@ -236,8 +240,10 @@ export default class player {
       false);
 
     let contentEndedListener = () => {
-      adsLoader.contentComplete();
-      this.isContentFinished = true //prevent post-roll to re-play the content
+      if (this.isAllAdsCompleted || this.isPostrollAllowed) {
+        adsLoader.contentComplete();
+        this.isContentFinished = true //prevent post-roll to re-play the content
+      }
     }
     this._player.onended = contentEndedListener;
 
@@ -295,6 +301,9 @@ export default class player {
       (e) => { this.onAdEvent(e) });
 
     adsManager.addEventListener(
+      google.ima.AdEvent.Type.AD_PROGRESS,
+      (e) => { this.onAdEvent(e) });
+    adsManager.addEventListener(
       google.ima.AdEvent.Type.LOADED,
       (e) => { this.onAdEvent(e) });
     adsManager.addEventListener(
@@ -309,6 +318,13 @@ export default class player {
   onAdEvent(e) {
     const currentType = google.ima.AdEvent.Type
     switch (e.type) {
+      case currentType.LOADED:
+        let ad = e.getAd();
+        console.log('onAdLoaded')
+        if (!ad.isLinear()) {
+          this.play();
+        }
+        break;
       case currentType.STARTED:
         this.isAdsPlaying = true
         if (this.onPlaying) {
@@ -348,7 +364,9 @@ export default class player {
   }
 
   onContentResumeRequested() {
-    this._player.play();
+    if (!this.isContentFinished) {
+      this._player.play();
+    }
   }
 
   play() {
@@ -379,10 +397,8 @@ export default class player {
   }
 
   playVideo() {
-    if ((this.isAdsLoaded || !this._withAds) && !this.isContentFinished) {
+    if (this.isAdsLoaded || !this._withAds) {
       this._player.play()
-    } else if (this._withAds) {
-      this.setUpIMA()
     }
   }
 
