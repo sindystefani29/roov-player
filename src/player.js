@@ -265,6 +265,11 @@ export default class player {
   }
 
   playAds() {
+    if (this.isAdsLoaded) {
+      return;
+    }
+    this.isAdsLoaded = true
+
     this._player.load();
     adDisplayContainer.initialize();
 
@@ -407,9 +412,10 @@ export default class player {
   }
 
   pause() {
-    this._player.pause()
     if (this.isAdsPlaying) {
       adsManager.pause()
+    } else {
+      this._player.pause()
     }
   }
 

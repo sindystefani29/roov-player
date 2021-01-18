@@ -9,7 +9,8 @@ module.exports = {
         path: path.resolve(__dirname, "dist"),
         filename: "[name].js",
         library: "roov",
-        libraryTarget: "umd"
+        libraryTarget: "umd",
+        globalObject: `this`
     },
     module: {
         rules: [
