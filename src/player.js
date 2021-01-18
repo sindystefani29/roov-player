@@ -397,7 +397,7 @@ export default class player {
   }
 
   playVideo() {
-    if (this.isAdsLoaded || !this._withAds) {
+    if ((this.isAdsLoaded || !this._withAds) && !this.isContentFinished) {
       this._player.play()
     }
   }
