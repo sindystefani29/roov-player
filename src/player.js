@@ -1,6 +1,6 @@
 import { name as pkgName, version as pkgVersion } from '../package.json'
 let adsManager, adsLoader, adDisplayContainer
-let isConviva
+let isConviva, videoAnalytics, adAnalytics
 let _player, _playerConfig, _timeupdateListener, _onFinishListener
 let configs = {
   content: {
@@ -41,7 +41,7 @@ export default class player {
     // init audio
     this.initializeAudio(config);
 
-    if (isConviva) {
+    if (videoAnalytics) {
       this.reportPlaybackEnd()
     }
 
@@ -207,20 +207,20 @@ export default class player {
       // production release
       Conviva.Analytics.init(configs.content.PRODUCTION_CUSTOMER_KEY, null);
     }
-    this.videoAnalytics = Conviva.Analytics.buildVideoAnalytics();
-    this.videoAnalytics.setPlayer(this._player);
+    videoAnalytics = Conviva.Analytics.buildVideoAnalytics();
+    videoAnalytics.setPlayer(this._player);
     if (this._withAds) {
-      this.adAnalytics = Conviva.Analytics.buildAdAnalytics(this.videoAnalytics);
+      adAnalytics = Conviva.Analytics.buildAdAnalytics(videoAnalytics);
       this.setAdListener()
     }
   }
 
   reportAdBreakStarted() {
-    this.videoAnalytics.reportAdBreakStarted(Conviva.Constants.AdType.CLIENT_SIDE, Conviva.Constants.AdPlayer.CONTENT);
+    videoAnalytics.reportAdBreakStarted(Conviva.Constants.AdType.CLIENT_SIDE, Conviva.Constants.AdPlayer.CONTENT);
   }
 
   reportAdBreakEnded() {
-    this.videoAnalytics.reportAdBreakEnded();
+    videoAnalytics.reportAdBreakEnded();
   }
 
   reportDeviceMetadata() {
@@ -234,18 +234,18 @@ export default class player {
     for (let key in configs.content.tags) {
       this.convivaContentInfo[key] = configs.content.tags[key];
     }
-    this.videoAnalytics.reportPlaybackRequested(this.convivaContentInfo);
+    videoAnalytics.reportPlaybackRequested(this.convivaContentInfo);
   }
 
   reportPlaybackEnd() {
-    this.videoAnalytics.reportPlaybackEnded();
+    videoAnalytics.reportPlaybackEnded();
   }
 
   setAdListener() {
     this.convivaAdsInfo[Conviva.Constants.AD_TAG_URL] = this._adsURL;
     this.convivaAdsInfo[Conviva.Constants.AD_PRELOAD_FEATURE] = true;
     this.convivaAdsInfo[Conviva.Constants.IMASDK_CONTENT_PLAYER] = this._adElement;
-    this.adAnalytics.setAdListener(adsLoader, this.convivaAdsInfo);
+    adAnalytics.setAdListener(adsLoader, this.convivaAdsInfo);
   }
 
   setVideoMetadata() {
