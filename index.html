@@ -21,6 +21,8 @@
     <script src="//imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
     <script type="text/javascript" src="/conviva-core-sdk.debug.js"></script>
     <script type="text/javascript" src="/conviva-core-sdk.js"></script>
+    <script type="text/javascript" src="/conviva-html5native-impl.js"></script>
+    <script type="text/javascript" src="/conviva-googleima-module.js"></script>
     <script>
         let player
         document.getElementById('play-m3u8').addEventListener('click', (e) => {
@@ -116,7 +118,20 @@
                     TEST_CUSTOMER_KEY: 'ffc2bacab709e3c5eedc49af6520b33d3c204182',
                     PRODUCTION_CUSTOMER_KEY: 'ff84ae928c3b33064b76dec08f12500465e59a6f',
                     gatewayUrl: 'https://rcti.testonly.conviva.com',
-                    customTags: {},
+                    customTags: {
+                        app_version: '1.4.7',
+                        application_name: '',
+                        is_login: 'not login',
+                        audio_program_id: '',
+                        audio_program_name: '',
+                        audio_channel: '',
+                        audio_content_id: '',
+                        audio_program_type: '',
+                        audio_content_type: '',
+                        audio_asset_name: '',
+                        Genre: '',
+                        site: ''
+                    },
                     deviceTags: {}
                 }
             })

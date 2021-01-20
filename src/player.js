@@ -1,5 +1,6 @@
 import { name as pkgName, version as pkgVersion } from '../package.json'
 let adsManager, adsLoader, adDisplayContainer
+let isConviva
 let _player, _playerConfig, _timeupdateListener, _onFinishListener
 let configs = {
   content: {
@@ -43,20 +44,27 @@ export default class player {
     // init ads
     this.initializeConfigAds(config);
 
+    if (isConviva) {
+      this.reportPlaybackEnd()
+    }
+
+    // init conviva
+    this.initializeConviva(config)
+
     // setup event
     this.setupEvent(config);
   }
 
-  initializeAudio({ src = "", autoplay = false, convivaConfig = '' }) {
-    this._src = src;
-    this._player = document.getElementById('roov-player');
-    _player = this._player
-    this._player.setAttribute("playsinline", "");
-    this._player.src = !this.isHLS() ? src : '';
-    if (convivaConfig) {
+  initializeConviva({ convivaConfig = '' }) {
+    isConviva = convivaConfig ? true : false
+    if (isConviva) {
       //set conviva info state
       this.convivaContentInfo = {}
       this.convivaDeviceMetadata = {}
+
+      if (this._withAds) {
+        this.convivaAdsInfo = {}
+      }
 
       //set convivaDebug state
       this.convivaDebug = convivaConfig.debug;
@@ -65,15 +73,23 @@ export default class player {
       configs.content.assetName = convivaConfig.assetName;
       configs.content.live = convivaConfig.isLive;
       configs.content.url = this._src;
-      configs.content.contentLength = this.duration();
+      configs.content.contentLength = this.duration() ? this.duration() : 0;
       configs.content.TEST_CUSTOMER_KEY = convivaConfig.TEST_CUSTOMER_KEY;
       configs.content.PRODUCTION_CUSTOMER_KEY = convivaConfig.PRODUCTION_CUSTOMER_KEY;
       configs.content.gatewayUrl = convivaConfig.gatewayUrl;
       configs.content.customTags = convivaConfig.customTags;
       configs.content.deviceTags = convivaConfig.deviceTags;
       //call setup conviva function
-      this.setupConviva()
+      this.initConvivaClient()
     }
+  }
+
+  initializeAudio({ src = "", autoplay = false }) {
+    this._src = src;
+    this._player = document.getElementById('roov-player');
+    _player = this._player
+    this._player.setAttribute("playsinline", "");
+    this._player.src = !this.isHLS() ? src : '';
     if (autoplay) {
       this._player.muted = true
       this.play()
@@ -96,7 +112,7 @@ export default class player {
     this._withAds = withAds;
     this._adElement = adElement;
     this._adsURL = adsURL;
-    if (withAds) {
+    if (this._withAds) {
       this.onPlaying = onPlaying
       this.onBuffering = onBuffering
       this.getBufferLength = getBufferLength
@@ -130,6 +146,9 @@ export default class player {
     let timeupdateListener, onFinishListener = () => {
       if (this.isAllAdsCompleted || !this._withAds) {
         onFinish()
+        if (isConviva) {
+          this.reportPlaybackEnd()
+        }
       }
     }
 
@@ -174,9 +193,6 @@ export default class player {
     });
   }
 
-  setupConviva() {
-    this.initConvivaClient()
-  }
   // Initializes the Conviva Client
   initConvivaClient() {
     if (this.convivaDebug) {
@@ -189,10 +205,29 @@ export default class player {
       Conviva.Analytics.init(configs.content.PRODUCTION_CUSTOMER_KEY, null);
     }
     this.videoAnalytics = Conviva.Analytics.buildVideoAnalytics();
-    this.adAnalytics = Conviva.Analytics.buildAdAnalytics(this.videoAnalytics);
+    this.videoAnalytics.setPlayer(this._player);
+    if (this._withAds) {
+      this.adAnalytics = Conviva.Analytics.buildAdAnalytics(this.videoAnalytics);
+      this.setAdListener()
+    }
+  }
+
+  reportAdBreakStarted() {
+    this.videoAnalytics.reportAdBreakStarted(Conviva.Constants.AdType.CLIENT_SIDE, Conviva.Constants.AdPlayer.CONTENT);
+  }
+
+  reportAdBreakEnded() {
+    this.videoAnalytics.reportAdBreakEnded();
+  }
+
+  reportDeviceMetadata() {
+    this.setDeviceMetaData()
+    // set the rest of the required metadata fields as per the table below
+    Conviva.Analytics.setDeviceMetadata(this.convivaDeviceMetadata);
   }
 
   reportPlaybackStart() {
+    this.setVideoMetadata()
     for (let key in configs.content.tags) {
       this.convivaContentInfo[key] = configs.content.tags[key];
     }
@@ -203,6 +238,13 @@ export default class player {
     this.videoAnalytics.reportPlaybackEnded();
   }
 
+  setAdListener() {
+    this.convivaAdsInfo[Conviva.Constants.AD_TAG_URL] = this._adsURL;
+    this.convivaAdsInfo[Conviva.Constants.AD_PRELOAD_FEATURE] = true;
+    this.convivaAdsInfo[Conviva.Constants.IMASDK_CONTENT_PLAYER] = this._adElement;
+    this.adAnalytics.setAdListener(adsLoader, this.convivaAdsInfo);
+  }
+
   setVideoMetadata() {
     this.convivaContentInfo[Conviva.Constants.STREAM_URL] = configs.content.url
     this.convivaContentInfo[Conviva.Constants.ASSET_NAME] = configs.content.assetName
@@ -210,10 +252,10 @@ export default class player {
     this.convivaContentInfo[Conviva.Constants.PLAYER_NAME] = configs.content.applicationName
     this.convivaContentInfo[Conviva.Constants.VIEWER_ID] = configs.content.viewerId
     this.convivaContentInfo[Conviva.Constants.DEFAULT_RESOURCE] = 'Resource Unknown'
-    this.convivaContentInfo[Conviva.Constants.DURATION] = configs.content.contentLength
+    // this.convivaContentInfo[Conviva.Constants.DURATION] = configs.content.contentLength
     this.convivaContentInfo[Conviva.Constants.ENCODED_FRAMERATE] = 0
-    this.convivaContentInfo[Conviva.Constants.FRAMEWORK_NAME] = configs.content.frameworkName
-    this.convivaContentInfo[Conviva.Constants.FRAMEWORK_VERSION] = configs.content.frameworkVersion
+    // this.convivaContentInfo[Conviva.Constants.FRAMEWORK_NAME] = configs.content.frameworkName
+    // this.convivaContentInfo[Conviva.Constants.FRAMEWORK_VERSION] = configs.content.frameworkVersion
     this.convivaContentInfo[Conviva.Constants.APPLICATION_VERSION] = configs.content.applicationVersion
   }
 
@@ -340,6 +382,9 @@ export default class player {
         this.onBuffering()
         break;
       case currentType.COMPLETE:
+        if (isConviva) {
+          this.reportAdBreakEnded()
+        }
         this.isAdsPlaying = false
         break;
       case currentType.AD_PROGRESS:
@@ -352,6 +397,9 @@ export default class player {
         this.isAllAdsCompleted = true
         if (this.isContentFinished) {
           this.onFinish()
+          if (isConviva) {
+            this.reportPlaybackEnd()
+          }
         }
         break;
       default:
@@ -365,6 +413,9 @@ export default class player {
   }
 
   onContentPauseRequested() {
+    if (isConviva) {
+      this.reportAdBreakStarted()
+    }
     this._player.pause();
   }
 
@@ -404,6 +455,10 @@ export default class player {
   playVideo() {
     if ((this.isAdsLoaded || !this._withAds) && !this.isContentFinished) {
       this._player.play()
+      if (isConviva) {
+        this.reportPlaybackStart()
+        this.reportDeviceMetadata()
+      }
     }
   }
 
@@ -416,6 +471,9 @@ export default class player {
       adsManager.pause()
     } else {
       this._player.pause()
+      if (isConviva) {
+        this.reportPlaybackEnd()
+      }
     }
   }
 

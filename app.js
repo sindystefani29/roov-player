@@ -16,6 +16,12 @@ app.get('/conviva-core-sdk.debug.js', (req, res) => {
 app.get('/conviva-core-sdk.js', (req, res) => {
   res.sendFile(path.join(__dirname + '/conviva/conviva-core-sdk.js'));
 })
+app.get('/conviva-html5native-impl.js', (req, res) => {
+  res.sendFile(path.join(__dirname + '/conviva/conviva-html5native-impl.js'));
+})
+app.get('/conviva-googleima-module.js', (req, res) => {
+  res.sendFile(path.join(__dirname + '/conviva/conviva-googleima-module.js'));
+})
 
 app.use('/', express.static('dist'))
 
