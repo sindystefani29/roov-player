@@ -41,9 +41,6 @@ export default class player {
     // init audio
     this.initializeAudio(config);
 
-    // init ads
-    this.initializeConfigAds(config);
-
     if (isConviva) {
       this.reportPlaybackEnd()
     }
@@ -51,8 +48,33 @@ export default class player {
     // init conviva
     this.initializeConviva(config)
 
+    // init ads
+    this.initializeConfigAds(config);
+
     // setup event
     this.setupEvent(config);
+  }
+
+  initializeAudio({
+    src = "",
+    autoplay = false,
+    withAds = false,
+    adElement = "ad-container",
+    adsURL
+  }) {
+    this._src = src;
+    this._player = document.getElementById('roov-player');
+    _player = this._player
+    this._player.setAttribute("playsinline", "");
+    this._player.src = !this.isHLS() ? src : '';
+    this._withAds = withAds;
+    this._adElement = adElement;
+    this._adsURL = adsURL;
+    if (autoplay) {
+      this._player.muted = true
+      this.play()
+    }
+    console.log('isHLS', this.isHLS())
   }
 
   initializeConviva({ convivaConfig = '' }) {
@@ -84,23 +106,7 @@ export default class player {
     }
   }
 
-  initializeAudio({ src = "", autoplay = false }) {
-    this._src = src;
-    this._player = document.getElementById('roov-player');
-    _player = this._player
-    this._player.setAttribute("playsinline", "");
-    this._player.src = !this.isHLS() ? src : '';
-    if (autoplay) {
-      this._player.muted = true
-      this.play()
-    }
-    console.log('isHLS', this.isHLS())
-  }
-
   initializeConfigAds({
-    withAds = false,
-    adElement = "ad-container",
-    adsURL,
     onPlaying,
     onBuffering,
     getBufferLength,
@@ -109,9 +115,6 @@ export default class player {
     if (typeof google === "undefined") {
       return;
     }
-    this._withAds = withAds;
-    this._adElement = adElement;
-    this._adsURL = adsURL;
     if (this._withAds) {
       this.onPlaying = onPlaying
       this.onBuffering = onBuffering
