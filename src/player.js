@@ -120,7 +120,9 @@ export default class player {
       this.onBuffering = onBuffering
       this.getBufferLength = getBufferLength
       this.onFinish = onFinish
-      this.setUpIMA()
+      if (!this.isHLS()) {
+        this.setUpIMA()
+      }
     }
   }
 
@@ -388,6 +390,9 @@ export default class player {
         if (isConviva) {
           this.reportAdBreakEnded()
         }
+        if (this.isHLS()) {
+          this.playHls()
+        }
         this.isAdsPlaying = false
         break;
       case currentType.AD_PROGRESS:
@@ -424,7 +429,11 @@ export default class player {
 
   onContentResumeRequested() {
     if (!this.isContentFinished) {
-      this._player.play();
+      if (this.isHLS()) {
+        this.playHls()
+      } else {
+        this._player.play();
+      }
     }
   }
 
@@ -434,25 +443,33 @@ export default class player {
       return;
     }
     if (this.isHLS()) {
-      import(/* webpackChunkName: "Hls" */ 'hls.js/dist/hls.light').then(({ default: Hls }) => {
-        if (Hls.isSupported()) {
-          this._hls = new Hls();
-          this._hls.loadSource(this._src);
-          this._hls.attachMedia(this._player);
-          this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
-            this.playVideo()
-          });
-        }
-        else if (this._player.canPlayType('application/vnd.apple.mpegurl')) {
-          this._player.src = this._src;
-          this._player.addEventListener('loadedmetadata', () => {
-            this.playVideo()
-          });
-        }
-      });
+      if (this._withAds) {
+        this.setUpIMA()
+      } else {
+        this.playHls()
+      }
     } else {
       this.playVideo()
     }
+  }
+
+  playHls() {
+    import(/* webpackChunkName: "Hls" */ 'hls.js/dist/hls.light').then(({ default: Hls }) => {
+      if (Hls.isSupported()) {
+        this._hls = new Hls();
+        this._hls.loadSource(this._src);
+        this._hls.attachMedia(this._player);
+        this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          this.playVideo()
+        });
+      }
+      else if (this._player.canPlayType('application/vnd.apple.mpegurl')) {
+        this._player.src = this._src;
+        this._player.addEventListener('loadedmetadata', () => {
+          this.playVideo()
+        });
+      }
+    });
   }
 
   playVideo() {
