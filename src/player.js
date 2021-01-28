@@ -9,7 +9,7 @@ let configs = {
     url: "",
     contentLength: 0,
     frameworkName: 'HTML 5',
-    frameworkVersion: '0.0.0',
+    frameworkVersion: '1.0.0',
     applicationName: pkgName,
     applicationVersion: pkgVersion,
     viewerId: "",
@@ -231,8 +231,8 @@ export default class player {
 
   reportPlaybackStart() {
     this.setVideoMetadata()
-    for (let key in configs.content.tags) {
-      this.convivaContentInfo[key] = configs.content.tags[key];
+    for (let key in configs.content.customTags) {
+      this.convivaContentInfo[key] = configs.content.customTags[key];
     }
     videoAnalytics.reportPlaybackRequested(this.convivaContentInfo);
   }
@@ -257,8 +257,8 @@ export default class player {
     this.convivaContentInfo[Conviva.Constants.DEFAULT_RESOURCE] = 'Resource Unknown'
     // this.convivaContentInfo[Conviva.Constants.DURATION] = configs.content.contentLength
     this.convivaContentInfo[Conviva.Constants.ENCODED_FRAMERATE] = 0
-    // this.convivaContentInfo[Conviva.Constants.FRAMEWORK_NAME] = configs.content.frameworkName
-    // this.convivaContentInfo[Conviva.Constants.FRAMEWORK_VERSION] = configs.content.frameworkVersion
+    this.convivaContentInfo[Conviva.Constants.FRAMEWORK_NAME] = configs.content.frameworkName
+    this.convivaContentInfo[Conviva.Constants.FRAMEWORK_VERSION] = configs.content.frameworkVersion
     this.convivaContentInfo[Conviva.Constants.APPLICATION_VERSION] = configs.content.applicationVersion
   }
 
