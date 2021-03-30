@@ -31,7 +31,7 @@ let configs = {
 
 export default class player {
   constructor(config) {
-    if (adsManager != undefined) {
+    if (adsManager !== undefined) {
       adsManager.destroy()
     }
     if (_player) {
