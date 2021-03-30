@@ -31,7 +31,7 @@ let configs = {
 
 export default class player {
   constructor(config) {
-    if (adsManager) {
+    if (adsManager != undefined) {
       adsManager.destroy()
     }
     if (_player) {
@@ -417,7 +417,9 @@ export default class player {
 
   onAdError(adErrorEvent) {
     console.log(adErrorEvent.getError());
-    adsManager.destroy();
+    if (adsManager !== undefined) {
+      adsManager.destroy();
+    }
   }
 
   onContentPauseRequested() {
