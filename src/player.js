@@ -1,52 +1,52 @@
-import { name as pkgName, version as pkgVersion } from '../package.json'
-let adsManager, adsLoader, adDisplayContainer
-let isConviva, videoAnalytics, adAnalytics
-let _player, _playerConfig, _timeupdateListener, _onFinishListener
+import { name as pkgName, version as pkgVersion } from "../package.json";
+let adsManager, adsLoader, adDisplayContainer;
+let isConviva, videoAnalytics, adAnalytics;
+let _player, _playerConfig, _timeupdateListener, _onFinishListener;
 let configs = {
   content: {
-    assetName: '',
+    assetName: "",
     live: false,
     url: "",
     contentLength: 0,
-    frameworkName: 'HTML 5',
-    frameworkVersion: '1.0.0',
+    frameworkName: "HTML 5",
+    frameworkVersion: "1.0.0",
     applicationName: pkgName,
     applicationVersion: pkgVersion,
     viewerId: "",
     customTags: {}, // Custom metadata
     deviceTags: {
-      brand: '',
-      manufacturer: '',
-      model: '',
-      type: '',
-      os_name: '',
-      os_version: '',
-      category: ''
+      brand: "",
+      manufacturer: "",
+      model: "",
+      type: "",
+      os_name: "",
+      os_version: "",
+      category: "",
     },
     TEST_CUSTOMER_KEY: "YOUR CONVIVA TEST CUSTOMER KEY",
-    PRODUCTION_CUSTOMER_KEY: 'YOUR CONVIVA PRODUCTION CUSTOMER KEY',
-    gatewayUrl: '',
-  }
+    PRODUCTION_CUSTOMER_KEY: "YOUR CONVIVA PRODUCTION CUSTOMER KEY",
+    gatewayUrl: "",
+  },
 };
 
 export default class player {
   constructor(config) {
     if (adsManager) {
-      adsManager.destroy()
+      adsManager.destroy();
     }
     if (_player) {
-      this.destroyPlayer(_playerConfig)
+      this.destroyPlayer(_playerConfig);
     }
 
     // init audio
     this.initializeAudio(config);
 
     if (videoAnalytics) {
-      this.reportPlaybackEnd()
+      this.reportPlaybackEnd();
     }
 
     // init conviva
-    this.initializeConviva(config)
+    this.initializeConviva(config);
 
     // init ads
     this.initializeConfigAds(config);
@@ -60,32 +60,32 @@ export default class player {
     autoplay = false,
     withAds = false,
     adElement = "ad-container",
-    adsURL
+    adsURL,
   }) {
     this._src = src;
-    this._player = document.getElementById('roov-player');
-    _player = this._player
+    this._player = document.getElementById("roov-player");
+    _player = this._player;
     this._player.setAttribute("playsinline", "");
-    this._player.src = !this.isHLS() ? src : '';
+    this._player.src = !this.isHLS() ? src : "";
     this._withAds = withAds;
     this._adElement = adElement;
     this._adsURL = adsURL;
     if (autoplay) {
-      this._player.muted = true
-      this.play()
+      this._player.muted = true;
+      this.play();
     }
-    console.log('isHLS', this.isHLS())
+    console.log("isHLS", this.isHLS());
   }
 
-  initializeConviva({ convivaConfig = '' }) {
-    isConviva = convivaConfig ? true : false
+  initializeConviva({ convivaConfig = "" }) {
+    isConviva = convivaConfig ? true : false;
     if (isConviva) {
       //set conviva info state
-      this.convivaContentInfo = {}
-      this.convivaDeviceMetadata = {}
+      this.convivaContentInfo = {};
+      this.convivaDeviceMetadata = {};
 
       if (this._withAds) {
-        this.convivaAdsInfo = {}
+        this.convivaAdsInfo = {};
       }
 
       //set convivaDebug state
@@ -97,39 +97,32 @@ export default class player {
       configs.content.url = this._src;
       configs.content.contentLength = this.duration() ? this.duration() : 0;
       configs.content.TEST_CUSTOMER_KEY = convivaConfig.TEST_CUSTOMER_KEY;
-      configs.content.PRODUCTION_CUSTOMER_KEY = convivaConfig.PRODUCTION_CUSTOMER_KEY;
+      configs.content.PRODUCTION_CUSTOMER_KEY =
+        convivaConfig.PRODUCTION_CUSTOMER_KEY;
       configs.content.gatewayUrl = convivaConfig.gatewayUrl;
       configs.content.customTags = convivaConfig.customTags;
       configs.content.deviceTags = convivaConfig.deviceTags;
       //call setup conviva function
-      this.initConvivaClient()
+      this.initConvivaClient();
     }
   }
 
-  initializeConfigAds({
-    onPlaying,
-    onBuffering,
-    getBufferLength,
-    onFinish
-  }) {
+  initializeConfigAds({ onPlaying, onBuffering, getBufferLength, onFinish }) {
     if (typeof google === "undefined") {
       return;
     }
     if (this._withAds) {
-      this.onPlaying = onPlaying
-      this.onBuffering = onBuffering
-      this.getBufferLength = getBufferLength
-      this.onFinish = onFinish
+      this.onPlaying = onPlaying;
+      this.onBuffering = onBuffering;
+      this.getBufferLength = getBufferLength;
+      this.onFinish = onFinish;
       if (!this.isHLS()) {
-        this.setUpIMA()
+        this.setUpIMA();
       }
     }
   }
 
-  destroyPlayer({
-    onPlaying,
-    onBuffering
-  }) {
+  destroyPlayer({ onPlaying, onBuffering }) {
     _player.removeEventListener("playing", onPlaying);
     _player.removeEventListener("waiting", onBuffering);
     _player.removeEventListener("ended", _onFinishListener);
@@ -142,22 +135,23 @@ export default class player {
     onFinish,
     onTimeUpdate,
     onBuffering,
-    getBufferLength
+    getBufferLength,
   }) {
-    _playerConfig = { onPlaying, onBuffering }
+    _playerConfig = { onPlaying, onBuffering };
 
     this.onloaderror = onloaderror;
 
-    let timeupdateListener, onFinishListener = () => {
-      if (this.isAllAdsCompleted || !this._withAds) {
-        onFinish()
-        if (isConviva) {
-          this.reportPlaybackEnd()
+    let timeupdateListener,
+      onFinishListener = () => {
+        if (this.isAllAdsCompleted || !this._withAds) {
+          onFinish();
+          if (isConviva) {
+            this.reportPlaybackEnd();
+          }
         }
-      }
-    }
+      };
 
-    _onFinishListener = onFinishListener
+    _onFinishListener = onFinishListener;
 
     if (onPlaying) {
       this._player.addEventListener("playing", onPlaying);
@@ -168,34 +162,41 @@ export default class player {
     if (onFinish) {
       this._player.addEventListener("ended", onFinishListener);
     }
-    this._player.addEventListener("timeupdate", timeupdateListener = () => {
-      if (onTimeUpdate) {
-        onTimeUpdate();
-      }
-      if (getBufferLength && !this.isAdsPlaying) {
-        let bufferedEnd, currentSeconds
-        const buffered = this._player.buffered;
-        const duration = this._player.duration;
-        if (buffered.length > 0) {
-          for (var i = 0; i < buffered.length; i++) {
-            if (buffered.start(buffered.length - 1 - i) < this._player.currentTime) {
-              bufferedEnd = (buffered.end(buffered.length - 1 - i) / duration) * 100
-              currentSeconds = (this._player.currentTime / duration) * 100
-              if (this._hls) {
-                getBufferLength(0, 0);
-              } else {
-                getBufferLength(currentSeconds, bufferedEnd);
-                if ((currentSeconds == 100) && (bufferedEnd == 100)) {
-                  this.isPostrollAllowed = true
+    this._player.addEventListener(
+      "timeupdate",
+      (timeupdateListener = () => {
+        if (onTimeUpdate) {
+          onTimeUpdate();
+        }
+        if (getBufferLength && !this.isAdsPlaying) {
+          let bufferedEnd, currentSeconds;
+          const buffered = this._player.buffered;
+          const duration = this._player.duration;
+          if (buffered.length > 0) {
+            for (var i = 0; i < buffered.length; i++) {
+              if (
+                buffered.start(buffered.length - 1 - i) <
+                this._player.currentTime
+              ) {
+                bufferedEnd =
+                  (buffered.end(buffered.length - 1 - i) / duration) * 100;
+                currentSeconds = (this._player.currentTime / duration) * 100;
+                if (this._hls) {
+                  getBufferLength(0, 0);
+                } else {
+                  getBufferLength(currentSeconds, bufferedEnd);
+                  if (currentSeconds == 100 && bufferedEnd == 100) {
+                    this.isPostrollAllowed = true;
+                  }
                 }
+                break;
               }
-              break;
             }
           }
         }
-      }
-      _timeupdateListener = timeupdateListener
-    });
+        _timeupdateListener = timeupdateListener;
+      })
+    );
   }
 
   // Initializes the Conviva Client
@@ -213,12 +214,16 @@ export default class player {
     videoAnalytics.setPlayer(this._player);
     if (this._withAds) {
       adAnalytics = Conviva.Analytics.buildAdAnalytics(videoAnalytics);
-      this.setAdListener()
+      this.setAdListener();
     }
+    this.reportPlaybackStart();
   }
 
   reportAdBreakStarted() {
-    videoAnalytics.reportAdBreakStarted(Conviva.Constants.AdType.CLIENT_SIDE, Conviva.Constants.AdPlayer.CONTENT);
+    videoAnalytics.reportAdBreakStarted(
+      Conviva.Constants.AdType.CLIENT_SIDE,
+      Conviva.Constants.AdPlayer.CONTENT
+    );
   }
 
   reportAdBreakEnded() {
@@ -226,16 +231,18 @@ export default class player {
   }
 
   reportDeviceMetadata() {
-    this.setDeviceMetaData()
+    this.setDeviceMetaData();
     // set the rest of the required metadata fields as per the table below
     Conviva.Analytics.setDeviceMetadata(this.convivaDeviceMetadata);
   }
 
   reportPlaybackStart() {
-    this.setVideoMetadata()
+    this.setVideoMetadata();
     for (let key in configs.content.customTags) {
       this.convivaContentInfo[key] = configs.content.customTags[key];
     }
+    // console.log("TEST REPORT PLAYBACK: ", Conviva);
+    videoAnalytics.setContentInfo(this.convivaContentInfo);
     videoAnalytics.reportPlaybackRequested(this.convivaContentInfo);
   }
 
@@ -246,32 +253,58 @@ export default class player {
   setAdListener() {
     this.convivaAdsInfo[Conviva.Constants.AD_TAG_URL] = this._adsURL;
     this.convivaAdsInfo[Conviva.Constants.AD_PRELOAD_FEATURE] = true;
-    this.convivaAdsInfo[Conviva.Constants.IMASDK_CONTENT_PLAYER] = this._adElement;
+    this.convivaAdsInfo[
+      Conviva.Constants.IMASDK_CONTENT_PLAYER
+    ] = this._adElement;
     adAnalytics.setAdListener(adsLoader, this.convivaAdsInfo);
   }
 
   setVideoMetadata() {
-    this.convivaContentInfo[Conviva.Constants.STREAM_URL] = configs.content.url
-    this.convivaContentInfo[Conviva.Constants.ASSET_NAME] = configs.content.assetName
-    this.convivaContentInfo[Conviva.Constants.IS_LIVE] = configs.content.live ? Conviva.Constants.StreamType.LIVE : Conviva.Constants.StreamType.VOD
-    this.convivaContentInfo[Conviva.Constants.PLAYER_NAME] = configs.content.applicationName
-    this.convivaContentInfo[Conviva.Constants.VIEWER_ID] = configs.content.viewerId
-    this.convivaContentInfo[Conviva.Constants.DEFAULT_RESOURCE] = 'Resource Unknown'
+    this.convivaContentInfo[Conviva.Constants.STREAM_URL] = configs.content.url;
+    this.convivaContentInfo[Conviva.Constants.ASSET_NAME] =
+      configs.content.assetName;
+    this.convivaContentInfo[Conviva.Constants.IS_LIVE] = configs.content.live
+      ? Conviva.Constants.StreamType.LIVE
+      : Conviva.Constants.StreamType.VOD;
+    this.convivaContentInfo[Conviva.Constants.PLAYER_NAME] =
+      configs.content.applicationName;
+    this.convivaContentInfo[Conviva.Constants.VIEWER_ID] =
+      configs.content.viewerId;
+    this.convivaContentInfo[Conviva.Constants.DEFAULT_RESOURCE] =
+      "Resource Unknown";
     // this.convivaContentInfo[Conviva.Constants.DURATION] = configs.content.contentLength
-    this.convivaContentInfo[Conviva.Constants.ENCODED_FRAMERATE] = 0
-    this.convivaContentInfo[Conviva.Constants.FRAMEWORK_NAME] = configs.content.frameworkName
-    this.convivaContentInfo[Conviva.Constants.FRAMEWORK_VERSION] = configs.content.frameworkVersion
-    this.convivaContentInfo[Conviva.Constants.APPLICATION_VERSION] = configs.content.applicationVersion
+    this.convivaContentInfo[Conviva.Constants.ENCODED_FRAMERATE] = 0;
+    this.convivaContentInfo[Conviva.Constants.FRAMEWORK_NAME] =
+      configs.content.frameworkName;
+    this.convivaContentInfo[Conviva.Constants.FRAMEWORK_VERSION] =
+      configs.content.frameworkVersion;
+    this.convivaContentInfo[Conviva.Constants.APPLICATION_VERSION] =
+      configs.content.applicationVersion;
   }
 
   setDeviceMetaData() {
-    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.BRAND] = configs.content.deviceTags.brand
-    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.MANUFACTURER] = configs.content.deviceTags.manufacturer
-    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.MODEL] = configs.content.deviceTags.model
-    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.TYPE] = configs.content.deviceTags.type === 'desktop' ? Conviva.Constants.DeviceType.DESKTOP : configs.content.deviceTags.type === 'mobile' ? Conviva.Constants.DeviceType.MOBILE : Conviva.Constants.DeviceType.CONSOLE_LOG
-    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.OS_NAME] = configs.content.deviceTags.os_name
-    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.OS_VERSION] = configs.content.deviceTags.os_version
-    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.CATEGORY] = configs.content.deviceTags.category == 'android' ? Conviva.Constants.DeviceCategory.ANDROID : configs.content.deviceTags.category == 'ios' ? Conviva.Constants.DeviceCategory.IOS : Conviva.Constants.DeviceCategory.WEB
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.BRAND] =
+      configs.content.deviceTags.brand;
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.MANUFACTURER] =
+      configs.content.deviceTags.manufacturer;
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.MODEL] =
+      configs.content.deviceTags.model;
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.TYPE] =
+      configs.content.deviceTags.type === "desktop"
+        ? Conviva.Constants.DeviceType.DESKTOP
+        : configs.content.deviceTags.type === "mobile"
+        ? Conviva.Constants.DeviceType.MOBILE
+        : Conviva.Constants.DeviceType.CONSOLE_LOG;
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.OS_NAME] =
+      configs.content.deviceTags.os_name;
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.OS_VERSION] =
+      configs.content.deviceTags.os_version;
+    this.convivaDeviceMetadata[Conviva.Constants.DeviceMetadata.CATEGORY] =
+      configs.content.deviceTags.category == "android"
+        ? Conviva.Constants.DeviceCategory.ANDROID
+        : configs.content.deviceTags.category == "ios"
+        ? Conviva.Constants.DeviceCategory.IOS
+        : Conviva.Constants.DeviceCategory.WEB;
   }
 
   setUpIMA() {
@@ -279,19 +312,25 @@ export default class player {
     adsLoader = new google.ima.AdsLoader(adDisplayContainer);
     adsLoader.addEventListener(
       google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
-      (e) => { this.onAdsManagerLoaded(e) },
-      false);
+      (e) => {
+        this.onAdsManagerLoaded(e);
+      },
+      false
+    );
     adsLoader.addEventListener(
       google.ima.AdErrorEvent.Type.AD_ERROR,
-      (e) => { this.onAdError(e) },
-      false);
+      (e) => {
+        this.onAdError(e);
+      },
+      false
+    );
 
     let contentEndedListener = () => {
       if (this.isAllAdsCompleted || this.isPostrollAllowed) {
         adsLoader.contentComplete();
-        this.isContentFinished = true //prevent post-roll to re-play the content
+        this.isContentFinished = true; //prevent post-roll to re-play the content
       }
-    }
+    };
     this._player.onended = contentEndedListener;
 
     var adsRequest = new google.ima.AdsRequest();
@@ -305,17 +344,18 @@ export default class player {
     adsLoader.requestAds(adsRequest);
   }
 
-
   createAdDisplayContainer() {
     adDisplayContainer = new google.ima.AdDisplayContainer(
-      document.getElementById('ad-container'), this._player);
+      document.getElementById("ad-container"),
+      this._player
+    );
   }
 
   playAds() {
     if (this.isAdsLoaded) {
       return;
     }
-    this.isAdsLoaded = true
+    this.isAdsLoaded = true;
 
     this._player.load();
     adDisplayContainer.initialize();
@@ -337,63 +377,74 @@ export default class player {
     var adsRenderingSettings = new google.ima.AdsRenderingSettings();
     adsRenderingSettings.restoreCustomPlaybackStateOnAdBreakComplete = true;
     adsManager = adsManagerLoadedEvent.getAdsManager(
-      this._player, adsRenderingSettings);
+      this._player,
+      adsRenderingSettings
+    );
 
-    adsManager.addEventListener(
-      google.ima.AdErrorEvent.Type.AD_ERROR,
-      (e) => { this.onAdError(e) });
+    adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, (e) => {
+      this.onAdError(e);
+    });
     adsManager.addEventListener(
       google.ima.AdEvent.Type.CONTENT_PAUSE_REQUESTED,
-      (e) => { this.onContentPauseRequested(e) });
+      (e) => {
+        this.onContentPauseRequested(e);
+      }
+    );
     adsManager.addEventListener(
       google.ima.AdEvent.Type.CONTENT_RESUME_REQUESTED,
-      (e) => { this.onContentResumeRequested(e) });
+      (e) => {
+        this.onContentResumeRequested(e);
+      }
+    );
     adsManager.addEventListener(
       google.ima.AdEvent.Type.ALL_ADS_COMPLETED,
-      (e) => { this.onAdEvent(e) });
+      (e) => {
+        this.onAdEvent(e);
+      }
+    );
 
-    adsManager.addEventListener(
-      google.ima.AdEvent.Type.AD_PROGRESS,
-      (e) => { this.onAdEvent(e) });
-    adsManager.addEventListener(
-      google.ima.AdEvent.Type.LOADED,
-      (e) => { this.onAdEvent(e) });
-    adsManager.addEventListener(
-      google.ima.AdEvent.Type.STARTED,
-      (e) => { this.onAdEvent(e) });
-    adsManager.addEventListener(
-      google.ima.AdEvent.Type.COMPLETE,
-      (e) => { this.onAdEvent(e) });
-    this.playAds()
+    adsManager.addEventListener(google.ima.AdEvent.Type.AD_PROGRESS, (e) => {
+      this.onAdEvent(e);
+    });
+    adsManager.addEventListener(google.ima.AdEvent.Type.LOADED, (e) => {
+      this.onAdEvent(e);
+    });
+    adsManager.addEventListener(google.ima.AdEvent.Type.STARTED, (e) => {
+      this.onAdEvent(e);
+    });
+    adsManager.addEventListener(google.ima.AdEvent.Type.COMPLETE, (e) => {
+      this.onAdEvent(e);
+    });
+    this.playAds();
   }
 
   onAdEvent(e) {
-    const currentType = google.ima.AdEvent.Type
+    const currentType = google.ima.AdEvent.Type;
     switch (e.type) {
       case currentType.LOADED:
         let ad = e.getAd();
-        console.log('onAdLoaded')
+        console.log("onAdLoaded");
         if (!ad.isLinear()) {
           this.play();
         }
         break;
       case currentType.STARTED:
-        this.isAdsPlaying = true
+        this.isAdsPlaying = true;
         if (this.onPlaying) {
-          this.onPlaying({ state: 'ADS' })
+          this.onPlaying({ state: "ADS" });
         }
         break;
       case currentType.AD_BUFFERING:
-        this.onBuffering()
+        this.onBuffering();
         break;
       case currentType.COMPLETE:
         if (isConviva) {
-          this.reportAdBreakEnded()
+          this.reportAdBreakEnded();
         }
         if (this.isHLS()) {
-          this.playHls()
+          this.playHls();
         }
-        this.isAdsPlaying = false
+        this.isAdsPlaying = false;
         break;
       case currentType.AD_PROGRESS:
         let adData = e.getAdData();
@@ -402,16 +453,16 @@ export default class player {
         }
         break;
       case currentType.ALL_ADS_COMPLETED:
-        this.isAllAdsCompleted = true
+        this.isAllAdsCompleted = true;
         if (this.isContentFinished) {
-          this.onFinish()
+          this.onFinish();
           if (isConviva) {
-            this.reportPlaybackEnd()
+            this.reportPlaybackEnd();
           }
         }
         break;
       default:
-        console.log('onAdEvent')
+        console.log("onAdEvent");
     }
   }
 
@@ -421,16 +472,16 @@ export default class player {
   }
 
   onContentPauseRequested() {
-    if (isConviva) {
-      this.reportAdBreakStarted()
-    }
+    // if (isConviva) {
+    // 	this.reportAdBreakStarted()
+    // }
     this._player.pause();
   }
 
   onContentResumeRequested() {
     if (!this.isContentFinished) {
       if (this.isHLS()) {
-        this.playHls()
+        this.playHls();
       } else {
         this._player.play();
       }
@@ -439,45 +490,46 @@ export default class player {
 
   play() {
     if (this.isAdsPlaying) {
-      adsManager.resume()
+      adsManager.resume();
       return;
     }
     if (this.isHLS()) {
       if (this._withAds) {
-        this.setUpIMA()
+        this.setUpIMA();
       } else {
-        this.playHls()
+        this.playHls();
       }
     } else {
-      this.playVideo()
+      this.playVideo();
     }
   }
 
   playHls() {
-    import(/* webpackChunkName: "Hls" */ 'hls.js/dist/hls.light').then(({ default: Hls }) => {
-      if (Hls.isSupported()) {
-        this._hls = new Hls();
-        this._hls.loadSource(this._src);
-        this._hls.attachMedia(this._player);
-        this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
-          this.playVideo()
-        });
+    import(/* webpackChunkName: "Hls" */ "hls.js/dist/hls.light").then(
+      ({ default: Hls }) => {
+        if (Hls.isSupported()) {
+          this._hls = new Hls();
+          this._hls.loadSource(this._src);
+          this._hls.attachMedia(this._player);
+          this._hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            this.playVideo();
+          });
+        } else if (this._player.canPlayType("application/vnd.apple.mpegurl")) {
+          this._player.src = this._src;
+          this._player.addEventListener("loadedmetadata", () => {
+            this.playVideo();
+          });
+        }
       }
-      else if (this._player.canPlayType('application/vnd.apple.mpegurl')) {
-        this._player.src = this._src;
-        this._player.addEventListener('loadedmetadata', () => {
-          this.playVideo()
-        });
-      }
-    });
+    );
   }
 
   playVideo() {
     if ((this.isAdsLoaded || !this._withAds) && !this.isContentFinished) {
-      this._player.play()
+      this._player.play();
       if (isConviva) {
-        this.reportPlaybackStart()
-        this.reportDeviceMetadata()
+        // this.reportPlaybackStart()
+        this.reportDeviceMetadata();
       }
     }
   }
@@ -488,11 +540,11 @@ export default class player {
 
   pause() {
     if (this.isAdsPlaying) {
-      adsManager.pause()
+      adsManager.pause();
     } else {
-      this._player.pause()
+      this._player.pause();
       if (isConviva) {
-        this.reportPlaybackEnd()
+        this.reportPlaybackEnd();
       }
     }
   }
